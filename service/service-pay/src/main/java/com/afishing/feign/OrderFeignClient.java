@@ -2,8 +2,11 @@ package com.afishing.feign;
 
 import com.afishing.common.result.Result;
 import com.afishing.entity.Order;
+import com.afishing.entity.OrderItem;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 /**
  * 订单服务Feign客户端
@@ -25,4 +28,10 @@ public interface OrderFeignClient {
             @PathVariable("id") Long id,
             @RequestParam Integer status,
             @RequestParam Integer payType);
+
+    /**
+     * 获取订单项列表
+     */
+    @GetMapping("/order/items/{orderId}")
+    Result<List<OrderItem>> getOrderItems(@PathVariable("orderId") Long orderId);
 }

@@ -282,4 +282,12 @@ public class OrderServiceImpl implements OrderService {
         
         return dto;
     }
+
+    @Override
+    public Result<List<OrderItem>> getOrderItems(Long orderId) {
+        LambdaQueryWrapper<OrderItem> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(OrderItem::getOrderId, orderId);
+        List<OrderItem> items = orderItemMapper.selectList(wrapper);
+        return Result.success(items);
+    }
 }

@@ -64,3 +64,20 @@ export function getHotProducts(limit = 8) {
     params: { limit }
   })
 }
+
+// 获取轮播图商品列表
+export function getBannerProducts() {
+  return productRequest({
+    url: '/banner',
+    method: 'get'
+  })
+}
+
+// 设置/取消商品轮播图
+export function setBanner(id, isBanner, bannerSort = 0) {
+  return productRequest({
+    url: `/admin/banner/${id}`,
+    method: 'put',
+    params: { isBanner, bannerSort }
+  })
+}

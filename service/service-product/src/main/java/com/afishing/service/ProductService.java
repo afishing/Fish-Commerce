@@ -13,7 +13,7 @@ public interface ProductService {
 
     Result<PageResult<Product>> getProductList(Long categoryId, String keyword, Integer page, Integer size);
 
-    Result<PageResult<Product>> getProductListWithSort(Long categoryId, String keyword, String sortBy, Integer page, Integer size);
+    Result<PageResult<Product>> getProductListWithSort(Long categoryId, String keyword, String sortBy, Long tagId, List<Long> tagIds, Integer page, Integer size);
 
     Result<Product> getProductDetail(Long id);
 
@@ -26,6 +26,11 @@ public interface ProductService {
     Result<Void> deleteProduct(Long id);
 
     Result<Void> updateStock(Long id, Integer quantity);
+
+    /**
+     * 更新商品销量和库存（支付成功后调用）
+     */
+    Result<Void> updateSalesAndStock(Long id, Integer quantity);
 
     /**
      * 获取商品列表（管理员用）
@@ -41,4 +46,19 @@ public interface ProductService {
      * 获取所有商品（用于统计）
      */
     Result<List<Product>> getAllProducts();
+
+    /**
+     * 更新商品详情（Markdown内容）
+     */
+    Result<Void> updateProductDetail(Long id, String detail);
+
+    /**
+     * 设置/取消轮播图
+     */
+    Result<Void> setBanner(Long id, Integer isBanner, Integer bannerSort);
+
+    /**
+     * 获取轮播图商品列表
+     */
+    Result<List<Product>> getBannerProducts();
 }

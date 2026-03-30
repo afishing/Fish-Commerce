@@ -4,16 +4,41 @@
     <AppHeader />
 
     <!-- 轮播图 -->
-    <el-carousel height="450px" class="banner" :interval="5000">
+    <el-carousel height="480px" class="banner" :interval="5000" arrow="always">
       <el-carousel-item v-for="item in banners" :key="item.id">
-        <div class="banner-content" :style="{ background: item.color }">
-          <div class="banner-icon">{{ item.icon }}</div>
-          <h1>{{ item.title }}</h1>
-          <p>{{ item.desc }}</p>
-          <el-button type="primary" size="large" round @click="$router.push('/products')">
-            <el-icon><ShoppingCart /></el-icon>
-            立即选购
-          </el-button>
+        <!-- 商品轮播图：以商品主图为背景 -->
+        <div
+          v-if="item.type === 'product'"
+          class="banner-content banner-product"
+          :style="{ backgroundImage: `url(${getImageUrl(item.image)})` }"
+          @click="$router.push(`/products/${item.productId}`)"
+        >
+          <div class="banner-overlay"></div>
+          <div class="banner-inner">
+            <h1>{{ item.title }}</h1>
+            <p>{{ item.desc }}</p>
+            <el-button type="primary" size="large" round @click.stop="$router.push(`/products/${item.productId}`)" class="banner-btn">
+              <el-icon><ShoppingCart /></el-icon>
+              查看详情
+            </el-button>
+          </div>
+        </div>
+        <!-- 静态轮播图：渐变色背景 -->
+        <div
+          v-else
+          class="banner-content"
+          :style="{ background: item.color }"
+        >
+          <div class="banner-overlay"></div>
+          <div class="banner-inner">
+            <div class="banner-icon">{{ item.icon }}</div>
+            <h1>{{ item.title }}</h1>
+            <p>{{ item.desc }}</p>
+            <el-button type="primary" size="large" round @click="$router.push('/products')" class="banner-btn">
+              <el-icon><ShoppingCart /></el-icon>
+              立即选购
+            </el-button>
+          </div>
         </div>
       </el-carousel-item>
     </el-carousel>
@@ -21,33 +46,42 @@
     <!-- 商品分类 -->
     <div class="section categories">
       <div class="section-header">
-        <el-icon class="section-icon" :size="28"><Grid /></el-icon>
-        <h2 class="section-title">商品分类</h2>
+        <div class="section-title-wrapper">
+          <el-icon class="section-icon" :size="24"><Grid /></el-icon>
+          <h2 class="section-title">商品分类</h2>
+        </div>
+        <div class="section-line"></div>
       </div>
       <div class="category-grid">
-        <el-card shadow="hover" class="category-card" v-for="cat in categories" :key="cat.id" @click="$router.push('/products')">
+        <div class="category-card" v-for="cat in categories" :key="cat.id" @click="$router.push('/products')">
           <div class="icon-wrapper">{{ cat.icon }}</div>
           <div class="name">{{ cat.name }}</div>
-        </el-card>
+        </div>
       </div>
     </div>
 
     <!-- 热门商品 -->
     <div class="section hot-products">
       <div class="section-header">
-        <el-icon class="section-icon" :size="28"><TrendCharts /></el-icon>
-        <h2 class="section-title">热门商品</h2>
+        <div class="section-title-wrapper">
+          <el-icon class="section-icon" :size="24"><TrendCharts /></el-icon>
+          <h2 class="section-title">热门商品</h2>
+        </div>
+        <div class="section-line"></div>
       </div>
       
       <!-- 商品列表 -->
       <template v-if="hotProducts.length > 0">
         <el-row :gutter="20">
           <el-col :span="6" v-for="product in hotProducts" :key="product.id">
-            <el-card shadow="hover" class="product-card" @click="$router.push(`/products/${product.id}`)">
+            <el-card shadow="never" class="product-card" @click="$router.push(`/products/${product.id}`)">
               <div class="product-image-wrapper">
                 <img :src="getImageUrl(product.mainImage || product.image)" class="product-image" />
                 <div class="product-badge" v-if="product.sales > 1000">
                   <el-icon><Trophy /></el-icon> 热销
+                </div>
+                <div class="product-overlay">
+                  <el-button type="primary" size="small" round @click.stop="addToCart(product)">加入购物车</el-button>
                 </div>
               </div>
               <div class="product-info">
@@ -64,10 +98,6 @@
                   </span>
                 </div>
               </div>
-              <el-button type="primary" class="add-cart-btn" @click.stop="addToCart(product)">
-                <el-icon><ShoppingCart /></el-icon>
-                加入购物车
-              </el-button>
             </el-card>
           </el-col>
         </el-row>
@@ -97,16 +127,34 @@
     </div>
 
     <!-- 页脚 -->
-    <el-footer class="footer">
+    <footer class="footer">
       <div class="footer-content">
-        <div class="footer-logo">🐟 飞鱼商城</div>
-        <p>分布式电商系统 | 新鲜直达 品质保证</p>
+        <div class="footer-brand">
+          <div class="footer-logo">🐟 飞鱼商城</div>
+          <p class="footer-slogan">分布式电商系统 | 新鲜直达 品质保证</p>
+        </div>
+        <div class="footer-divider"></div>
         <div class="footer-links">
-          <span><el-icon><Phone /></el-icon> 客服热线: 400-888-8888</span>
-          <span><el-icon><Message /></el-icon> 邮箱: service@afishing.com</span>
+          <div class="footer-link-item">
+            <el-icon><Phone /></el-icon>
+            <div>
+              <div class="link-label">客服热线</div>
+              <div class="link-value">400-888-8888</div>
+            </div>
+          </div>
+          <div class="footer-link-item">
+            <el-icon><Message /></el-icon>
+            <div>
+              <div class="link-label">邮笱联系</div>
+              <div class="link-value">service@afishing.com</div>
+            </div>
+          </div>
         </div>
       </div>
-    </el-footer>
+      <div class="footer-bottom">
+        <span>© 2024 飞鱼商城. All rights reserved.</span>
+      </div>
+    </footer>
     
     <!-- 回到顶部按钮 -->
     <el-backtop :visibility-height="200" />
@@ -119,7 +167,7 @@
 <script setup>
 import { reactive, ref, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { ElMessage } from 'element-plus'
+import { ElMessage, ElNotification } from 'element-plus'
 import { 
   Loading, ShoppingCart, Grid, TrendCharts, Trophy, User, 
   Phone, Message, Star
@@ -127,16 +175,41 @@ import {
 import AppHeader from '@/components/AppHeader.vue'
 import DancingCharacter from '@/components/DancingCharacter.vue'
 import { addToCart as addToCartApi } from '@/api/cart'
-import { getProductList } from '@/api/product'
+import { getProductList, getBannerProducts } from '@/api/product'
 import { getImageUrl } from '@/utils/image'
+import { getActiveNotices } from '@/api/notice'
 
 const router = useRouter()
 
 const banners = reactive([
-  { id: 1, title: '欢迎来到飞鱼商城', desc: '新鲜直达，品质保证', color: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', icon: '🐟' },
-  { id: 2, title: '限时特惠', desc: '全场商品低至5折起', color: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)', icon: '🔥' },
-  { id: 3, title: '新品上市', desc: '挪威三文鱼新鲜到货', color: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)', icon: '✨' }
+  { id: 1, title: '欢迎来到飞鱼商城', desc: '新鲜直达，品质保证', color: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', icon: '🐟', type: 'static' },
+  { id: 2, title: '限时特惠', desc: '全场商品低至5折起', color: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)', icon: '🔥', type: 'static' },
+  { id: 3, title: '新品上市', desc: '挝威三文鱼新鲜到货', color: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)', icon: '✨', type: 'static' }
 ])
+
+// 加载轮播图商品
+const loadBannerProducts = async () => {
+  try {
+    const res = await getBannerProducts()
+    const products = res.data || []
+    if (products.length > 0) {
+      // 将商品数据转换为轮播图数据，替换静态轮播图
+      banners.length = 0
+      products.forEach(product => {
+        banners.push({
+          id: product.id,
+          title: product.name,
+          desc: product.description || '新鲜直达，品质保证',
+          image: product.mainImage,
+          productId: product.id,
+          type: 'product'
+        })
+      })
+    }
+  } catch (error) {
+    console.error('加载轮播图商品失败，使用默认轮播图')
+  }
+}
 
 const categories = reactive([
   { id: 1, name: '海鲜鱼类', icon: '🐟' },
@@ -248,13 +321,40 @@ const handleScroll = () => {
 }
 
 onMounted(() => {
+  loadBannerProducts()
   loadProducts()
+  loadAndShowNotices()
   window.addEventListener('scroll', handleScroll)
 })
 
 onUnmounted(() => {
   window.removeEventListener('scroll', handleScroll)
 })
+
+// 加载并显示公告
+const loadAndShowNotices = async () => {
+  try {
+    const res = await getActiveNotices()
+    const notices = res.data || []
+    if (notices.length > 0) {
+      notices.forEach((notice, index) => {
+        setTimeout(() => {
+          const noticeType = notice.type === 1 ? 'info' : notice.type === 2 ? 'success' : 'warning'
+          ElNotification({
+            title: notice.title,
+            message: notice.content,
+            type: noticeType,
+            position: 'top-right',
+            duration: 5000, // 5秒后自动关闭（悬停时暂停）
+            offset: index * 120
+          })
+        }, index * 300) // 错开显示时间
+      })
+    }
+  } catch (error) {
+    console.error('加载公告失败:', error)
+  }
+}
 
 const addToCart = async (product) => {
   // 检查登录状态
@@ -293,7 +393,7 @@ const addToCart = async (product) => {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  background: linear-gradient(180deg, #f5f7fa 0%, #e4e7ed 100%);
+  background: #f7f8fc;
 }
 
 .banner {
@@ -302,31 +402,75 @@ const addToCart = async (product) => {
 
 .banner-content {
   height: 100%;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.banner-product {
+  background-size: cover;
+  background-position: center;
+  cursor: pointer;
+}
+
+.banner-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,0.15);
+  backdrop-filter: blur(1px);
+}
+
+.banner-inner {
+  position: relative;
+  z-index: 1;
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
   color: #fff;
-  animation: fadeIn 0.5s ease-in-out;
+  animation: fadeInUp 0.6s ease-out;
 }
 
 .banner-icon {
   margin-bottom: 20px;
-  opacity: 0.9;
-  font-size: 80px;
+  font-size: 90px;
   line-height: 1;
+  filter: drop-shadow(0 4px 12px rgba(0,0,0,0.3));
 }
 
-.banner-content h1 {
-  font-size: 48px;
-  margin-bottom: 15px;
-  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+.banner-inner h1 {
+  font-size: 52px;
+  margin-bottom: 16px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-shadow: 0 2px 12px rgba(0,0,0,0.25);
 }
 
-.banner-content p {
+.banner-inner p {
   font-size: 20px;
-  margin-bottom: 30px;
-  opacity: 0.9;
+  margin-bottom: 32px;
+  opacity: 0.92;
+  font-weight: 300;
+  letter-spacing: 1px;
+}
+
+.banner-btn {
+  padding: 14px 36px;
+  font-size: 16px;
+  font-weight: 500;
+  background: rgba(255,255,255,0.2);
+  backdrop-filter: blur(4px);
+  border: 1.5px solid rgba(255,255,255,0.6);
+  color: #fff;
+  letter-spacing: 1px;
+  transition: all 0.3s;
+}
+
+.banner-btn:hover {
+  background: rgba(255,255,255,0.35);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.2);
 }
 
 .section {
@@ -334,14 +478,21 @@ const addToCart = async (product) => {
   max-width: 1400px;
   margin: 0 auto;
   width: 100%;
+  box-sizing: border-box;
 }
 
 .section-header {
   display: flex;
+  flex-direction: column;
   align-items: center;
-  justify-content: center;
-  gap: 12px;
-  margin-bottom: 35px;
+  margin-bottom: 36px;
+}
+
+.section-title-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
 }
 
 .section-icon {
@@ -349,48 +500,54 @@ const addToCart = async (product) => {
 }
 
 .section-title {
-  text-align: center;
   font-size: 28px;
-  color: #303133;
+  color: #1a2744;
   margin: 0;
-  font-weight: 600;
+  font-weight: 700;
+  letter-spacing: 1px;
+}
+
+.section-line {
+  width: 48px;
+  height: 3px;
+  background: linear-gradient(90deg, #409eff, #764ba2);
+  border-radius: 2px;
 }
 
 .categories {
   background: #fff;
-  border-radius: 16px;
-  margin: -30px auto 30px;
+  border-radius: 20px;
+  margin: -36px auto 30px;
   position: relative;
   z-index: 10;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
   max-width: 1320px;
 }
 
 .category-grid {
   display: flex;
   justify-content: space-between;
-  gap: 20px;
+  gap: 16px;
 }
 
 .category-card {
   text-align: center;
   cursor: pointer;
-  padding: 25px 15px;
-  border-radius: 12px;
-  border: none;
+  padding: 24px 12px;
+  border-radius: 16px;
   transition: all 0.3s ease;
-  background: linear-gradient(145deg, #ffffff 0%, #f5f7fa 100%);
+  background: #f7f8fc;
   flex: 1;
 }
 
 .category-card:hover {
   transform: translateY(-8px);
-  box-shadow: 0 12px 24px rgba(64, 158, 255, 0.2);
-  background: linear-gradient(145deg, #409eff 0%, #66b1ff 100%);
+  box-shadow: 0 12px 28px rgba(64, 158, 255, 0.22);
+  background: linear-gradient(145deg, #409eff 0%, #764ba2 100%);
 }
 
 .category-card:hover .icon-wrapper {
-  background: rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.25);
 }
 
 .category-card:hover .name {
@@ -398,22 +555,22 @@ const addToCart = async (product) => {
 }
 
 .category-card .icon-wrapper {
-  width: 70px;
-  height: 70px;
-  margin: 0 auto 15px;
+  width: 66px;
+  height: 66px;
+  margin: 0 auto 14px;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #409eff 0%, #66b1ff 100%);
+  background: linear-gradient(135deg, #409eff 0%, #764ba2 100%);
   border-radius: 50%;
-  color: #fff;
   transition: all 0.3s ease;
-  font-size: 32px;
+  font-size: 30px;
 }
 
 .category-card .name {
   color: #606266;
   font-weight: 500;
+  font-size: 14px;
   transition: all 0.3s ease;
 }
 
@@ -425,14 +582,16 @@ const addToCart = async (product) => {
   cursor: pointer;
   transition: all 0.3s ease;
   margin-bottom: 20px;
-  border-radius: 12px;
+  border-radius: 16px;
   overflow: hidden;
-  border: none;
+  border: 1px solid #f0f2f5;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.04);
 }
 
 .product-card:hover {
-  transform: translateY(-8px);
-  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.12);
+  transform: translateY(-6px);
+  box-shadow: 0 16px 40px rgba(64, 158, 255, 0.14);
+  border-color: rgba(64,158,255,0.2);
 }
 
 .product-image-wrapper {
@@ -442,13 +601,28 @@ const addToCart = async (product) => {
 
 .product-image {
   width: 100%;
-  height: 180px;
+  height: 190px;
   object-fit: cover;
-  transition: transform 0.3s ease;
+  transition: transform 0.4s ease;
 }
 
 .product-card:hover .product-image {
-  transform: scale(1.05);
+  transform: scale(1.08);
+}
+
+.product-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.product-card:hover .product-overlay {
+  opacity: 1;
 }
 
 .product-badge {
@@ -457,25 +631,27 @@ const addToCart = async (product) => {
   left: 10px;
   background: linear-gradient(135deg, #f56c6c 0%, #e6a23c 100%);
   color: #fff;
-  padding: 4px 12px;
+  padding: 4px 10px;
   border-radius: 20px;
   font-size: 12px;
   display: flex;
   align-items: center;
   gap: 4px;
+  font-weight: 500;
 }
 
 .product-info {
-  padding: 18px;
+  padding: 16px;
 }
 
 .product-info h3 {
-  font-size: 16px;
-  margin-bottom: 8px;
-  color: #303133;
+  font-size: 15px;
+  margin-bottom: 6px;
+  color: #1a2744;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  font-weight: 600;
 }
 
 .product-info .desc {
@@ -500,66 +676,99 @@ const addToCart = async (product) => {
 
 .price-symbol {
   color: #f56c6c;
-  font-size: 14px;
-  margin-right: 2px;
+  font-size: 13px;
+  margin-right: 1px;
+  font-weight: 600;
 }
 
 .price {
   color: #f56c6c;
-  font-size: 24px;
-  font-weight: bold;
+  font-size: 22px;
+  font-weight: 700;
 }
 
 .sales {
-  color: #909399;
+  color: #c0c4cc;
   font-size: 12px;
   display: flex;
   align-items: center;
-  gap: 4px;
-}
-
-.add-cart-btn {
-  width: calc(100% - 36px);
-  margin: 0 18px 18px;
-  border-radius: 8px;
-  font-weight: 500;
+  gap: 3px;
 }
 
 .footer {
-  background: linear-gradient(135deg, #303133 0%, #1a1a1a 100%);
+  background: linear-gradient(135deg, #1a2744 0%, #0d1b36 100%);
   color: #fff;
-  padding: 40px 20px;
   margin-top: auto;
 }
 
 .footer-content {
   max-width: 1400px;
   margin: 0 auto;
-  text-align: center;
+  padding: 48px 40px 32px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 32px;
+}
+
+.footer-brand {
+  text-align: left;
 }
 
 .footer-logo {
   font-size: 24px;
-  font-weight: bold;
-  margin-bottom: 10px;
+  font-weight: 700;
+  margin-bottom: 8px;
+  letter-spacing: 1px;
 }
 
-.footer-content p {
-  opacity: 0.8;
-  margin-bottom: 15px;
+.footer-slogan {
+  color: rgba(255,255,255,0.55);
+  font-size: 14px;
+  margin: 0;
+}
+
+.footer-divider {
+  width: 1px;
+  height: 60px;
+  background: rgba(255,255,255,0.15);
 }
 
 .footer-links {
   display: flex;
-  justify-content: center;
-  gap: 30px;
-  opacity: 0.7;
+  gap: 40px;
 }
 
-.footer-links span {
+.footer-link-item {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 12px;
+  color: rgba(255,255,255,0.7);
+}
+
+.footer-link-item .el-icon {
+  font-size: 22px;
+  color: #409eff;
+}
+
+.link-label {
+  font-size: 12px;
+  color: rgba(255,255,255,0.45);
+  margin-bottom: 2px;
+}
+
+.link-value {
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.footer-bottom {
+  text-align: center;
+  padding: 16px 40px;
+  border-top: 1px solid rgba(255,255,255,0.08);
+  font-size: 13px;
+  color: rgba(255,255,255,0.3);
 }
 
 .loading-more {
@@ -579,8 +788,8 @@ const addToCart = async (product) => {
   padding: 60px 0;
 }
 
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(20px); }
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(30px); }
   to { opacity: 1; transform: translateY(0); }
 }
 </style>

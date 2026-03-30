@@ -102,6 +102,22 @@ export function deleteProduct(productId) {
   })
 }
 
+export function updateProductDetail(productId, detail) {
+  return request({
+    url: `/api/product/admin/detail/${productId}`,
+    method: 'put',
+    data: detail,
+    headers: { 'Content-Type': 'text/plain' }
+  })
+}
+
+export function getProductDetail(productId) {
+  return request({
+    url: `/api/product/detail/${productId}`,
+    method: 'get'
+  })
+}
+
 // ========== 用户画像 ==========
 export function getUserPortrait() {
   return request({

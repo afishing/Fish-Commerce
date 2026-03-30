@@ -62,23 +62,63 @@
       <el-card style="margin-top: 20px">
         <el-tabs v-model="activeTab">
           <el-tab-pane label="商品详情" name="detail">
-            <div class="detail-images">
-              <el-image src="https://picsum.photos/600/400?random=20" fit="cover" />
-              <el-image src="https://picsum.photos/600/400?random=21" fit="cover" />
+            <div class="detail-content" v-if="product.detail" v-html="renderedDetail"></div>
+            <div class="detail-images" v-else>
+              <p class="no-detail">暂无商品详情</p>
             </div>
           </el-tab-pane>
           <el-tab-pane :label="`用户评价 (${reviews.length})`" name="reviews">
-            <div class="review-list">
-              <div class="review-item" v-for="review in reviews" :key="review.id">
-                <div class="review-header">
-                  <el-avatar :size="40">{{ review.username.charAt(0) }}</el-avatar>
-                  <div class="review-info">
-                    <span class="username">{{ review.username }}</span>
-                    <el-rate v-model="review.rating" disabled />
+            <div class="review-section">
+              <!-- 写评论按钮 -->
+              <div class="review-actions">
+                <el-button type="primary" @click="showReviewForm = true">
+                  <el-icon><Edit /></el-icon>
+                  写评价
+                </el-button>
+              </div>
+              
+              <!-- 评论表单 -->
+              <el-card v-if="showReviewForm" class="review-form-card">
+                <template #header>
+                  <span>发表评价</span>
+                </template>
+                <el-form :model="reviewForm" label-width="80px">
+                  <el-form-item label="评分">
+                    <el-rate v-model="reviewForm.rating" :max="5" />
+                  </el-form-item>
+                  <el-form-item label="评价内容">
+                    <el-input
+                      v-model="reviewForm.content"
+                      type="textarea"
+                      :rows="4"
+                      placeholder="分享您的使用体验..."
+                      maxlength="500"
+                      show-word-limit
+                    />
+                  </el-form-item>
+                  <el-form-item>
+                    <el-button @click="showReviewForm = false">取消</el-button>
+                    <el-button type="primary" @click="submitReview" :loading="reviewSubmitting">
+                      提交评价
+                    </el-button>
+                  </el-form-item>
+                </el-form>
+              </el-card>
+              
+              <!-- 评论列表 -->
+              <div v-loading="reviewsLoading" class="review-list">
+                <el-empty v-if="reviews.length === 0" description="暂无评价，快来抢沙发吧！" />
+                <div v-else class="review-item" v-for="review in reviews" :key="review.id">
+                  <div class="review-header">
+                    <el-avatar :size="40">{{ review.username ? review.username.charAt(0) : '用' }}</el-avatar>
+                    <div class="review-info">
+                      <span class="username">{{ review.username || '匿名用户' }}</span>
+                      <el-rate v-model="review.rating" disabled />
+                    </div>
+                    <span class="date">{{ review.createTime ? new Date(review.createTime).toLocaleDateString() : '' }}</span>
                   </div>
-                  <span class="date">{{ review.date }}</span>
+                  <p class="review-content">{{ review.content }}</p>
                 </div>
-                <p class="review-content">{{ review.content }}</p>
               </div>
             </div>
           </el-tab-pane>
@@ -123,12 +163,20 @@
 import { ref, reactive, computed, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { ElMessage } from 'element-plus'
-import { ChatDotRound, Wallet } from '@element-plus/icons-vue'
+import { ChatDotRound, Wallet, Edit } from '@element-plus/icons-vue'
 import AppHeader from '@/components/AppHeader.vue'
 import { addToCart as addToCartApi } from '@/api/cart'
 import { getProductDetail } from '@/api/product'
 import { createOrderWithItems, createPayment, confirmPayment, cancelPayment } from '@/api/order'
 import { getImageUrl } from '@/utils/image'
+import { marked } from 'marked'
+import { getProductReviews, addReview } from '@/api/review'
+
+// 配置marked选项
+marked.setOptions({
+  breaks: true,
+  gfm: true
+})
 
 const router = useRouter()
 const route = useRoute()
@@ -148,7 +196,8 @@ const product = reactive({
   origin: '',
   weight: '',
   shelfLife: '',
-  storage: ''
+  storage: '',
+  detail: ''
 })
 
 const selectedSpec = ref('500g')
@@ -167,11 +216,29 @@ const totalPrice = computed(() => {
   return unitPrice.value * quantity.value
 })
 
-const reviews = reactive([
-  { id: 1, username: '用户***鱼', rating: 5, date: '2024-01-15', content: '非常新鲜，肉质很好，下次还会购买！' },
-  { id: 2, username: '用户***虾', rating: 4, date: '2024-01-14', content: '包装很好，配送速度快，味道不错。' },
-  { id: 3, username: '用户***蟹', rating: 5, date: '2024-01-13', content: '三文鱼很新鲜，做刺身一级棒！' }
-])
+// 渲染Markdown详情
+const renderedDetail = computed(() => {
+  if (!product.detail) return ''
+  // 先处理图片URL，将相对路径转换为完整URL
+  const processedDetail = product.detail.replace(
+    /!\[([^\]]*)\]\(([^)]+)\)/g,
+    (match, alt, url) => {
+      const fullUrl = getImageUrl(url)
+      return `![${alt}](${fullUrl})`
+    }
+  )
+  return marked.parse(processedDetail)
+})
+
+// 评论相关
+const reviews = ref([])
+const reviewsLoading = ref(false)
+const reviewForm = reactive({
+  rating: 5,
+  content: ''
+})
+const reviewSubmitting = ref(false)
+const showReviewForm = ref(false)
 
 // 支付相关状态
 const payMethodDialogVisible = ref(false)
@@ -218,6 +285,7 @@ const fetchProductDetail = async () => {
       product.weight = data.weight || ''
       product.shelfLife = data.shelfLife || ''
       product.storage = data.storage || ''
+      product.detail = data.detail || ''
       console.log('设置后的product:', product)
     }
   } catch (error) {
@@ -230,7 +298,70 @@ const fetchProductDetail = async () => {
 
 onMounted(() => {
   fetchProductDetail()
+  fetchReviews()
 })
+
+// 获取评论列表
+const fetchReviews = async () => {
+  const productId = route.params.id
+  if (!productId) return
+  
+  reviewsLoading.value = true
+  try {
+    const res = await getProductReviews(productId)
+    if (res.code === 200 || res.success) {
+      reviews.value = res.data || []
+    }
+  } catch (error) {
+    console.error('获取评论失败:', error)
+  } finally {
+    reviewsLoading.value = false
+  }
+}
+
+// 提交评论
+const submitReview = async () => {
+  // 检查登录状态
+  const userInfo = localStorage.getItem('userInfo')
+  if (!userInfo) {
+    ElMessage.warning('请先登录后再评论')
+    router.push('/login')
+    return
+  }
+  
+  const user = JSON.parse(userInfo)
+  
+  if (!reviewForm.content.trim()) {
+    ElMessage.warning('请输入评论内容')
+    return
+  }
+  
+  reviewSubmitting.value = true
+  try {
+    const res = await addReview({
+      productId: product.id,
+      userId: user.id,
+      username: user.username || user.nickname || '匿名用户',
+      rating: reviewForm.rating,
+      content: reviewForm.content.trim()
+    })
+    
+    if (res.code === 200 || res.success) {
+      ElMessage.success('评论提交成功')
+      reviewForm.content = ''
+      reviewForm.rating = 5
+      showReviewForm.value = false
+      fetchReviews() // 刷新评论列表
+    } else {
+      ElMessage.error(res.message || '评论提交失败')
+    }
+  } catch (error) {
+    console.error('提交评论失败:', error)
+    ElMessage.error('评论提交失败')
+  } finally {
+    reviewSubmitting.value = false
+  }
+}
 
 const buyNow = async () => {
   // 检查登录状态
@@ -353,52 +484,64 @@ const addToCart = async () => {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  background: #f5f7fa;
+  background: #f7f8fc;
 }
 
 .main-content {
   max-width: 1200px;
   margin: 0 auto;
   width: 100%;
+  padding: 0 20px;
 }
 
 .product-card {
   margin-top: 20px;
-  padding: 30px;
+  padding: 32px;
+  border-radius: 20px;
+  border: none;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.06);
 }
 
 .product-card h1 {
-  font-size: 24px;
-  margin-bottom: 15px;
+  font-size: 26px;
+  margin-bottom: 12px;
+  color: #1a2744;
+  font-weight: 700;
+  line-height: 1.4;
 }
 
 .desc {
   color: #909399;
   margin-bottom: 20px;
-  line-height: 1.6;
+  line-height: 1.7;
+  font-size: 14px;
 }
 
 .price-box {
-  background: #fff5f5;
-  padding: 20px;
-  border-radius: 8px;
+  background: linear-gradient(135deg, #fff5f5 0%, #fff0f0 100%);
+  padding: 20px 24px;
+  border-radius: 12px;
+  border-left: 4px solid #f56c6c;
+  margin-bottom: 4px;
 }
 
 .price-box .label {
   color: #909399;
-  margin-right: 20px;
+  margin-right: 16px;
+  font-size: 14px;
 }
 
 .price {
   color: #f56c6c;
-  font-size: 28px;
-  font-weight: bold;
+  font-size: 32px;
+  font-weight: 700;
 }
 
 .original-price {
-  color: #909399;
+  color: #c0c4cc;
   text-decoration: line-through;
-  margin-left: 15px;
+  margin-left: 12px;
+  font-size: 16px;
 }
 
 .spec-row,
@@ -411,12 +554,20 @@ const addToCart = async () => {
   display: inline-block;
   width: 60px;
   color: #606266;
+  font-size: 14px;
 }
 
 .action-buttons {
-  margin-top: 30px;
+  margin-top: 28px;
   display: flex;
-  gap: 20px;
+  gap: 16px;
+}
+
+.action-buttons .el-button {
+  padding: 14px 36px;
+  font-size: 15px;
+  border-radius: 12px;
+  font-weight: 500;
 }
 
 .detail-images {
@@ -432,13 +583,13 @@ const addToCart = async () => {
 
 .review-item {
   padding: 20px 0;
-  border-bottom: 1px solid #ebeef5;
+  border-bottom: 1px solid #f0f2f5;
 }
 
 .review-header {
   display: flex;
   align-items: center;
-  gap: 15px;
+  gap: 14px;
   margin-bottom: 10px;
 }
 
@@ -447,26 +598,28 @@ const addToCart = async () => {
 }
 
 .username {
-  font-weight: bold;
+  font-weight: 600;
   margin-right: 10px;
+  color: #1a2744;
 }
 
 .date {
-  color: #909399;
+  color: #c0c4cc;
   font-size: 12px;
 }
 
 .review-content {
   color: #606266;
-  line-height: 1.6;
-  margin-left: 55px;
+  line-height: 1.7;
+  margin-left: 54px;
+  font-size: 14px;
 }
 
 /* 支付方式选择 */
 .pay-methods {
   display: flex;
   justify-content: center;
-  gap: 40px;
+  gap: 30px;
   padding: 20px 0;
 }
 
@@ -477,13 +630,14 @@ const addToCart = async () => {
   gap: 10px;
   padding: 20px 30px;
   border: 2px solid #e4e7ed;
-  border-radius: 8px;
+  border-radius: 12px;
   cursor: pointer;
   transition: all 0.3s;
 }
 
 .pay-method-item:hover {
   border-color: #409eff;
+  box-shadow: 0 4px 16px rgba(64,158,255,0.15);
 }
 
 .pay-method-item.active {
@@ -511,12 +665,134 @@ const addToCart = async () => {
 
 .pay-amount .amount {
   color: #f56c6c;
-  font-size: 24px;
-  font-weight: bold;
+  font-size: 26px;
+  font-weight: 700;
 }
 
 .pay-tip {
   color: #909399;
+  font-size: 14px;
+}
+
+/* 评论区域样式 */
+.review-section {
+  padding: 10px 0;
+}
+
+.review-actions {
+  margin-bottom: 20px;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.review-form-card {
+  margin-bottom: 20px;
+  background: #f7f8fc;
+  border-radius: 12px;
+}
+
+.review-list {
+  min-height: 200px;
+}
+
+/* Markdown渲染样式 */
+.detail-content {
+  padding: 20px;
+  line-height: 1.8;
+  color: #333;
+}
+
+.detail-content :deep(h1),
+.detail-content :deep(h2),
+.detail-content :deep(h3),
+.detail-content :deep(h4),
+.detail-content :deep(h5),
+.detail-content :deep(h6) {
+  margin: 20px 0 10px;
+  color: #1a2744;
+}
+
+.detail-content :deep(h1) { font-size: 24px; }
+.detail-content :deep(h2) { font-size: 22px; }
+.detail-content :deep(h3) { font-size: 20px; }
+.detail-content :deep(h4) { font-size: 18px; }
+
+.detail-content :deep(p) {
+  margin: 10px 0;
+}
+
+.detail-content :deep(ul),
+.detail-content :deep(ol) {
+  margin: 10px 0;
+  padding-left: 30px;
+}
+
+.detail-content :deep(li) {
+  margin: 5px 0;
+}
+
+.detail-content :deep(img) {
+  max-width: 100%;
+  border-radius: 8px;
+  margin: 15px 0;
+}
+
+.detail-content :deep(blockquote) {
+  margin: 15px 0;
+  padding: 10px 20px;
+  border-left: 4px solid #409eff;
+  background: #ecf5ff;
+  color: #606266;
+}
+
+.detail-content :deep(code) {
+  background: #f5f7fa;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-family: Consolas, monospace;
+  font-size: 14px;
+}
+
+.detail-content :deep(pre) {
+  background: #f5f7fa;
+  padding: 15px;
+  border-radius: 8px;
+  overflow-x: auto;
+}
+
+.detail-content :deep(pre code) {
+  background: transparent;
+  padding: 0;
+}
+
+.detail-content :deep(table) {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 15px 0;
+}
+
+.detail-content :deep(th),
+.detail-content :deep(td) {
+  border: 1px solid #ebeef5;
+  padding: 10px 15px;
+  text-align: left;
+}
+
+.detail-content :deep(th) {
+  background: #f5f7fa;
+  font-weight: bold;
+}
+
+.detail-content :deep(hr) {
+  border: none;
+  border-top: 1px solid #ebeef5;
+  margin: 20px 0;
+}
+
+.no-detail {
+  text-align: center;
+  color: #909399;
+  padding: 40px;
   font-size: 14px;
 }
 </style>

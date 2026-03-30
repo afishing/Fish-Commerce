@@ -11,9 +11,26 @@
     <!-- 已登录显示个人中心 -->
     <div v-else class="main-content">
       <el-aside width="240px" class="sidebar">
-        <el-card class="user-card">
+       <el-card class="user-card">
           <div class="avatar">
-            <el-avatar :size="80" :src="getImageUrl(user.avatar)" />
+            <el-upload
+              class="avatar-uploader"
+              action="http://localhost:5000/upload"
+              :headers="uploadHeaders"
+              :show-file-list="false"
+              :on-success="handleAvatarSuccess"
+              :on-error="handleAvatarError"
+              :before-upload="beforeAvatarUpload"
+              accept="image/*"
+            >
+              <div class="avatar-wrapper">
+                <el-avatar :size="80" :src="getImageUrl(user.avatar)" />
+                <div class="avatar-overlay">
+                  <el-icon v-if="!avatarUploading"><Camera /></el-icon>
+                  <el-icon v-else class="is-loading"><Loading /></el-icon>
+                </div>
+              </div>
+            </el-upload>
           </div>
           <h3>{{ user.username }}</h3>
         </el-card>
@@ -22,6 +39,10 @@
           <el-menu-item index="info" @click="activeMenu = 'info'">
             <el-icon><User /></el-icon>
             <span>个人信息</span>
+          </el-menu-item>
+          <el-menu-item index="vip" @click="activeMenu = 'vip'">
+            <el-icon><StarFilled /></el-icon>
+            <span>会员中心</span>
           </el-menu-item>
           <el-menu-item index="address" @click="handleAddressMenuClick">
             <el-icon><Location /></el-icon>
@@ -67,6 +88,84 @@
               <el-button type="primary" @click="saveInfo" :loading="loading">保存修改</el-button>
             </el-form-item>
           </el-form>
+        </el-card>
+
+        <!-- 会员中心 -->
+        <el-card v-if="activeMenu === 'vip'">
+          <template #header>
+            <span>会员中心</span>
+          </template>
+          <div class="vip-info">
+            <div class="vip-status">
+              <div class="vip-level">
+                <el-tag v-if="user.level && user.level > 0" type="warning" size="large">
+                  <el-icon><StarFilled /></el-icon>
+                  {{ user.level === 1 ? '月卡会员' : user.level === 2 ? '季卡会员' : '年卡会员' }}
+                </el-tag>
+                <el-tag v-else type="info" size="large">普通用户</el-tag>
+              </div>
+              <div v-if="user.vipExpireTime" class="vip-expire">
+                <p>会员有效期至：{{ formatDate(user.vipExpireTime) }}</p>
+              </div>
+            </div>
+            
+            <el-divider />
+            
+            <h4>开通会员</h4>
+            <el-row :gutter="20" style="margin-top: 16px">
+              <el-col :span="8">
+                <el-card shadow="hover" class="vip-card" @click="handleBuyVip(1)">
+                  <div class="vip-card-content">
+                    <div class="vip-card-title">月卡会员</div>
+                    <div class="vip-card-price">¥19.9</div>
+                    <div class="vip-card-desc">30天会员权益</div>
+                  </div>
+                </el-card>
+              </el-col>
+              <el-col :span="8">
+                <el-card shadow="hover" class="vip-card" @click="handleBuyVip(2)">
+                  <div class="vip-card-content">
+                    <div class="vip-card-title">季卡会员</div>
+                    <div class="vip-card-price">¥49.9</div>
+                    <div class="vip-card-desc">90天会员权益</div>
+                    <el-tag type="success" size="small">推荐</el-tag>
+                  </div>
+                </el-card>
+              </el-col>
+              <el-col :span="8">
+                <el-card shadow="hover" class="vip-card" @click="handleBuyVip(3)">
+                  <div class="vip-card-content">
+                    <div class="vip-card-title">年卡会员</div>
+                    <div class="vip-card-price">¥149.9</div>
+                    <div class="vip-card-desc">365天会员权益</div>
+                    <el-tag type="danger" size="small">超值</el-tag>
+                  </div>
+                </el-card>
+              </el-col>
+            </el-row>
+            
+            <el-divider />
+            
+            <h4>会员权益</h4>
+            <div class="vip-benefits">
+              <div class="benefit-item">
+                <el-icon><Check /></el-icon>
+                <span>专属折扣：会员商品享受95折优惠</span>
+              </div>
+              <div class="benefit-item">
+                <el-icon><Check /></el-icon>
+                <span>优先配送：订单优先处理</span>
+              </div>
+              <div class="benefit-item">
+                <el-icon><Check /></el-icon>
+                <span>专属客服：一对一贴心服务</span>
+              </div>
+              <div class="benefit-item">
+                <el-icon><Check /></el-icon>
+                <span>积分加倍：购物积分翻倍</span>
+              </div>
+            </div>
+          </div>
         </el-card>
 
         <!-- 收货地址 -->
@@ -211,12 +310,12 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
-import { User, Location, Lock } from '@element-plus/icons-vue'
+import { User, Location, Lock, Camera, Loading, StarFilled, Check } from '@element-plus/icons-vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import AppHeader from '@/components/AppHeader.vue'
-import { getUserInfo, updateUserInfo, updatePassword, updatePhone, updateEmail } from '@/api/user'
+import { getUserInfo, updateUserInfo, updatePassword, updatePhone, updateEmail, purchaseVip } from '@/api/user'
 import { getAddressList, addAddress, updateAddress, deleteAddress, setDefaultAddress } from '@/api/address'
 import { getImageUrl } from '@/utils/image'
 
@@ -239,7 +338,8 @@ const user = reactive({
   phone: '',
   gender: 2,
   birthday: '',
-  level: '普通会员',
+  level: 0,
+  vipExpireTime: null,
   avatar: ''
 })
 
@@ -291,12 +391,69 @@ const loadUserInfo = async (id) => {
         user.birthday = ''
       }
       user.avatar = data.avatar || ''
+      user.level = data.level || 0
+      user.vipExpireTime = data.vipExpireTime || null
     }
   } catch (error) {
     console.error('加载用户信息失败:', error)
     ElMessage.warning('加载用户信息失败')
   } finally {
     loading.value = false
+  }
+}
+
+// 格式化日期
+const formatDate = (dateStr) => {
+  if (!dateStr) return ''
+  const date = new Date(dateStr)
+  return date.toLocaleString('zh-CN', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit'
+  })
+}
+
+// 购买会员
+const handleBuyVip = async (vipType) => {
+  const vipNames = {
+    1: '月卡会员（¥19.9）',
+    2: '季卡会员（¥49.9）',
+    3: '年卡会员（¥149.9）'
+  }
+  
+  try {
+    await ElMessageBox.confirm(
+      `确认购买${vipNames[vipType]}？`,
+      '购买会员',
+      {
+        confirmButtonText: '确认购买',
+        cancelButtonText: '取消',
+        type: 'info'
+      }
+    )
+    
+    const res = await purchaseVip(user.id, vipType)
+    if (res.code === 0 || res.code === 200) {
+      ElMessage.success('购买成功')
+      // 重新加载用户信息
+      await loadUserInfo(user.id)
+      // 更新 localStorage
+      const currentUserInfo = JSON.parse(localStorage.getItem('userInfo'))
+      if (currentUserInfo) {
+        currentUserInfo.level = user.level
+        currentUserInfo.vipExpireTime = user.vipExpireTime
+        localStorage.setItem('userInfo', JSON.stringify(currentUserInfo))
+      }
+    } else {
+      ElMessage.error(res.message || res.msg || '购买失败')
+    }
+  } catch (error) {
+    if (error !== 'cancel') {
+      console.error('购买会员失败:', error)
+      ElMessage.error('购买失败，请稍后重试')
+    }
   }
 }
 
@@ -544,6 +701,59 @@ const emailForm = reactive({
 // 对话框加载状态
 const dialogLoading = ref(false)
 
+const avatarUploading = ref(false)
+
+// 上传请求头（携带 token）
+const uploadHeaders = computed(() => ({
+  Authorization: `Bearer ${localStorage.getItem('token') || ''}`
+}))
+
+// 头像上传成功
+const handleAvatarSuccess = async (response) => {
+  if (response.success || response.code === 200 || response.data) {
+    const newAvatar = response.data
+    user.avatar = newAvatar
+    avatarUploading.value = false
+    try {
+      await updateUserInfo({ id: user.id, avatar: newAvatar })
+      // 同步更新 localStorage
+      const currentUserInfo = JSON.parse(localStorage.getItem('userInfo'))
+      if (currentUserInfo) {
+        currentUserInfo.avatar = newAvatar
+        localStorage.setItem('userInfo', JSON.stringify(currentUserInfo))
+      }
+      // 通知导航栏刷新头像
+      window.dispatchEvent(new Event('userInfoUpdated'))
+      ElMessage.success('头像更新成功')
+    } catch (e) {
+      ElMessage.error('头像保存失败')
+    }
+  } else {
+    avatarUploading.value = false
+    ElMessage.error(response.message || '上传失败')
+  }
+}
+
+const handleAvatarError = () => {
+  avatarUploading.value = false
+  ElMessage.error('头像上传失败，请重试')
+}
+
+const beforeAvatarUpload = (file) => {
+  const isImage = file.type.startsWith('image/')
+  const isLt2M = file.size / 1024 / 1024 < 2
+  if (!isImage) {
+    ElMessage.error('只支持图片格式')
+    return false
+  }
+  if (!isLt2M) {
+    ElMessage.error('图片大小不能超过 2MB')
+    return false
+  }
+  avatarUploading.value = true
+  return true
+}
+
 const modifyPassword = () => {
   passwordForm.oldPassword = ''
   passwordForm.newPassword = ''
@@ -711,6 +921,37 @@ const submitEmail = async () => {
 
 .avatar {
   margin-bottom: 15px;
+  display: flex;
+  justify-content: center;
+}
+
+.avatar-uploader {
+  cursor: pointer;
+}
+
+.avatar-wrapper {
+  position: relative;
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  overflow: hidden;
+}
+
+.avatar-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.2s;
+  color: #fff;
+  font-size: 22px;
+}
+
+.avatar-wrapper:hover .avatar-overlay {
+  opacity: 1;
 }
 
 .user-card h3 {
@@ -778,5 +1019,75 @@ const submitEmail = async () => {
 .security-item .info p {
   color: #909399;
   font-size: 14px;
+}
+
+.vip-info {
+  padding: 10px 0;
+}
+
+.vip-status {
+  text-align: center;
+  padding: 20px 0;
+}
+
+.vip-level {
+  margin-bottom: 10px;
+}
+
+.vip-expire {
+  color: #909399;
+  font-size: 14px;
+}
+
+.vip-card {
+  cursor: pointer;
+  text-align: center;
+  transition: transform 0.2s, box-shadow 0.2s;
+  border: 2px solid transparent;
+}
+
+.vip-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  border-color: #409eff;
+}
+
+.vip-card-content {
+  padding: 10px 0;
+}
+
+.vip-card-title {
+  font-size: 16px;
+  font-weight: bold;
+  margin-bottom: 10px;
+}
+
+.vip-card-price {
+  font-size: 24px;
+  color: #f56c6c;
+  font-weight: bold;
+  margin-bottom: 10px;
+}
+
+.vip-card-desc {
+  color: #909399;
+  font-size: 12px;
+  margin-bottom: 10px;
+}
+
+.vip-benefits {
+  margin-top: 16px;
+}
+
+.benefit-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 0;
+  color: #67c23a;
+}
+
+.benefit-item .el-icon {
+  font-size: 18px;
 }
 </style>

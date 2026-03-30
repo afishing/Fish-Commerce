@@ -69,6 +69,11 @@ const routes = [
         component: () => import('../views/AdminUsers.vue')
       },
       {
+        path: 'reviews',
+        name: 'AdminReviews',
+        component: () => import('../views/AdminReviews.vue')
+      },
+      {
         path: 'orders',
         name: 'AdminOrders',
         component: () => import('../views/AdminOrders.vue')
@@ -92,6 +97,16 @@ const routes = [
         path: 'notices',
         name: 'AdminNotices',
         component: () => import('../views/AdminNotices.vue')
+      },
+      {
+        path: 'tags',
+        name: 'AdminTags',
+        component: () => import('../views/AdminTags.vue')
+      },
+      {
+        path: 'coupons',
+        name: 'AdminCoupons',
+        component: () => import('../views/AdminCoupons.vue')
       }
     ]
   }

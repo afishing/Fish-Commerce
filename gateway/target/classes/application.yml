@@ -84,6 +84,36 @@ spring:
           predicates:
             - Path=/upload/**
 
+        # 视频服务路由
+        - id: service-video
+          uri: lb://service-video
+          predicates:
+            - Path=/video/**
+
+        # 公告服务路由（在service-product中）
+        - id: service-notice
+          uri: lb://service-product
+          predicates:
+            - Path=/api/notice/**
+          filters:
+            - StripPrefix=1
+
+        # 标签服务路由（在service-product中）
+        - id: service-tag
+          uri: lb://service-product
+          predicates:
+            - Path=/api/tag/**
+          filters:
+            - StripPrefix=1
+
+        # AI服务路由
+        - id: service-ai
+          uri: lb://service-ai
+          predicates:
+            - Path=/api/ai/**
+          filters:
+            - StripPrefix=1
+
   # Redis 配置（用于限流）
   data:
     redis:

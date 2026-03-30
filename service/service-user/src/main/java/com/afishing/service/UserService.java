@@ -43,4 +43,16 @@ public interface UserService {
      * 修改邮箱
      */
     Result<Void> updateEmail(UpdateEmailDTO updateEmailDTO);
+
+    /**
+     * 购买会员
+     * @param userId 用户ID
+     * @param vipType 会员类型 1-月卡 2-季卡 3-年卡
+     */
+    Result<Void> purchaseVip(Long userId, Integer vipType);
+
+    /**
+     * 检查并更新会员状态（如果已过期则降级）
+     */
+    Result<Void> checkVipStatus(Long userId);
 }

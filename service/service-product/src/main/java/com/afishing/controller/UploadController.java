@@ -1,16 +1,19 @@
 package com.afishing.controller;
 
 import com.afishing.common.result.Result;
+import com.afishing.entity.GalleryImage;
+import com.afishing.service.GalleryService;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.List;
 import java.util.UUID;
 
 /**
@@ -27,8 +30,11 @@ public class UploadController {
     @Value("${file.access.url:/uploads/}")
     private String accessUrl;
 
+    @Autowired
+    private GalleryService galleryService;
+
     /**
-     * 上传图片
+     * 上传图片并写入图库记录
      */
     @PostMapping
     public Result<String> uploadImage(@RequestParam("file") MultipartFile file) {
@@ -51,23 +57,66 @@ public class UploadController {
 
             // 生成文件名
             String originalFilename = file.getOriginalFilename();
-            String extension = originalFilename != null 
-                    ? originalFilename.substring(originalFilename.lastIndexOf(".")) 
+            String extension = originalFilename != null
+                    ? originalFilename.substring(originalFilename.lastIndexOf("."))
                     : ".jpg";
             String filename = UUID.randomUUID().toString() + extension;
 
-            // 保存文件
+            // 保存文件到磁盘
             Path targetPath = uploadDir.resolve(filename);
             file.transferTo(targetPath.toFile());
 
-            // 返回访问URL
+            // 构建访问 URL
             String fileUrl = accessUrl + filename;
-            log.info("文件上传成功: {}", fileUrl);
-            
+
+            // 写入图库数据库记录
+            galleryService.saveImage(
+                    filename,
+                    originalFilename,
+                    fileUrl,
+                    file.getSize(),
+                    contentType
+            );
+
+            log.info("图片上传成功: {}", fileUrl);
             return Result.success("上传成功", fileUrl);
         } catch (IOException e) {
-            log.error("文件上传失败", e);
-            return Result.error("文件上传失败: " + e.getMessage());
+            log.error("图片上传失败", e);
+            return Result.error("图片上传失败: " + e.getMessage());
         }
+    }
+
+    /**
+     * 获取图库图片列表
+     */
+    @GetMapping("/list")
+    public Result<List<GalleryImage>> listImages() {
+        return galleryService.listImages();
+    }
+
+    /**
+     * 删除图库图片（物理文件 + 数据库记录）
+     */
+    @DeleteMapping
+    public Result<Void> deleteImage(@RequestParam("filename") String filename) {
+        try {
+            // 删除磁盘文件
+            Path uploadDir = Paths.get(uploadPath).toAbsolutePath().normalize();
+            Path filePath = uploadDir.resolve(filename);
+            Files.deleteIfExists(filePath);
+        } catch (IOException e) {
+            log.warn("物理文件删除失败: {}", filename, e);
+        }
+        // 删除数据库记录
+        return galleryService.deleteImageByFilename(filename);
+    }
+
+    /**
+     * 更新图片备注
+     */
+    @PutMapping("/remark")
+    public Result<Void> updateRemark(@RequestParam("id") Long id,
+                                     @RequestParam(value = "remark", required = false, defaultValue = "") String remark) {
+        return galleryService.updateRemark(id, remark);
     }
 }

@@ -61,3 +61,20 @@ export function updateEmail(data) {
     data
   })
 }
+
+// 购买会员
+export function purchaseVip(userId, vipType) {
+  return request({
+    url: '/api/user/vip/purchase',
+    method: 'post',
+    params: { userId, vipType }
+  })
+}
+
+// 检查会员状态
+export function checkVipStatus(userId) {
+  return request({
+    url: `/api/user/vip/check/${userId}`,
+    method: 'get'
+  })
+}

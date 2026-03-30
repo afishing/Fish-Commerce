@@ -54,9 +54,14 @@ public class User extends BaseEntity {
     private java.time.LocalDate birthday;
 
     /**
-     * 会员等级
+     * 会员等级 0-普通 1-月卡会员 2-季卡会员 3-年卡会员
      */
     private Integer level;
+
+    /**
+     * 会员到期时间
+     */
+    private java.time.LocalDateTime vipExpireTime;
 
     /**
      * 状态 0-正常 1-禁用

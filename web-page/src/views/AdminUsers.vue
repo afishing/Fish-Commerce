@@ -210,8 +210,8 @@ const getLevelType = (level) => {
 }
 
 const getLevelText = (level) => {
-  const texts = ['普通会员', '银卡会员', '金卡会员', '钻石会员']
-  return texts[level] || '普通会员'
+  const texts = ['普通用户', '月卡会员', '季卡会员', '年卡会员']
+  return texts[level] || '普通用户'
 }
 
 onMounted(() => {

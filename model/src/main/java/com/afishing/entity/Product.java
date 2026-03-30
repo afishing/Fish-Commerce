@@ -1,6 +1,7 @@
 package com.afishing.entity;
 
 import com.afishing.common.entity.BaseEntity;
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -84,4 +85,21 @@ public class Product extends BaseEntity {
      * 状态 0-下架 1-上架
      */
     private Integer status;
+
+    /**
+     * 商品详情（Markdown格式）
+     */
+    private String detail;
+
+    /**
+     * 是否为轮播图商品 0-否 1-是
+     */
+    @TableField("is_banner")
+    private Integer isBanner;
+
+    /**
+     * 轮播图排序（数字越小越靠前）
+     */
+    @TableField("banner_sort")
+    private Integer bannerSort;
 }

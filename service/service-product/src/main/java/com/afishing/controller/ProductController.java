@@ -7,7 +7,9 @@ import com.afishing.service.ProductService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * 商品控制器
@@ -27,9 +29,20 @@ public class ProductController {
             @RequestParam(required = false) Long categoryId,
             @RequestParam(required = false) String keyword,
             @RequestParam(required = false) String sortBy,
+            @RequestParam(required = false) Long tagId,
+            @RequestParam(required = false) String tagIds,
             @RequestParam(required = false, defaultValue = "1") Integer page,
             @RequestParam(required = false, defaultValue = "12") Integer size) {
-        return productService.getProductListWithSort(categoryId, keyword, sortBy, page, size);
+        // 支持多标签筛选（逗号分隔）
+        List<Long> tagIdList = null;
+        if (tagIds != null && !tagIds.isEmpty()) {
+            tagIdList = Arrays.stream(tagIds.split(","))
+                    .map(String::trim)
+                    .filter(s -> !s.isEmpty())
+                    .map(Long::parseLong)
+                    .collect(Collectors.toList());
+        }
+        return productService.getProductListWithSort(categoryId, keyword, sortBy, tagId, tagIdList, page, size);
     }
 
     /**
@@ -80,6 +93,15 @@ public class ProductController {
         return productService.updateStock(id, quantity);
     }
 
+    /**
+     * 更新商品销量和库存（支付成功后调用）
+     * 销量+quantity，库存-quantity
+     */
+    @PutMapping("/sales/{id}")
+    public Result<Void> updateSales(@PathVariable Long id, @RequestParam Integer quantity) {
+        return productService.updateSalesAndStock(id, quantity);
+    }
+
     // ========== 管理员接口 ==========
 
     /**
@@ -109,5 +131,32 @@ public class ProductController {
     @GetMapping("/admin/all")
     public Result<List<Product>> getAllProducts() {
         return productService.getAllProducts();
+    }
+
+    /**
+     * 更新商品详情（Markdown内容）
+     */
+    @PutMapping("/admin/detail/{id}")
+    public Result<Void> updateProductDetail(@PathVariable Long id, @RequestBody String detail) {
+        return productService.updateProductDetail(id, detail);
+    }
+
+    /**
+     * 获取轮播图商品列表
+     */
+    @GetMapping("/banner")
+    public Result<List<Product>> getBannerProducts() {
+        return productService.getBannerProducts();
+    }
+
+    /**
+     * 设置/取消轮播图
+     */
+    @PutMapping("/admin/banner/{id}")
+    public Result<Void> setBanner(
+            @PathVariable Long id,
+            @RequestParam Integer isBanner,
+            @RequestParam(required = false, defaultValue = "0") Integer bannerSort) {
+        return productService.setBanner(id, isBanner, bannerSort);
     }
 }

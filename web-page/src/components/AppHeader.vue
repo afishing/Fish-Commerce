@@ -100,22 +100,29 @@ const updateCartCount = () => {
 }
 
 // 检查登录状态
-onMounted(() => {
+const refreshUserInfo = () => {
   const storedUserInfo = localStorage.getItem('userInfo')
   if (storedUserInfo) {
     userInfo.value = JSON.parse(storedUserInfo)
   }
+}
+
+onMounted(() => {
+  refreshUserInfo()
   
   updateCartCount()
   
   // 监听购物车变化事件
   window.addEventListener('storage', updateCartCount)
   window.addEventListener('cartUpdated', updateCartCount)
+  // 监听用户信息更新（如头像修改）
+  window.addEventListener('userInfoUpdated', refreshUserInfo)
 })
 
 onUnmounted(() => {
   window.removeEventListener('storage', updateCartCount)
   window.removeEventListener('cartUpdated', updateCartCount)
+  window.removeEventListener('userInfoUpdated', refreshUserInfo)
 })
 
 // 下拉菜单命令处理
@@ -166,44 +173,73 @@ defineExpose({ updateUserInfo, updateCartCount })
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 40px;
-  background: linear-gradient(135deg, #ffffff 0%, #f5f7fa 100%);
-  box-shadow: 0 2px 20px rgba(0, 0, 0, 0.08);
-  height: 65px;
+  padding: 0 48px;
+  background: rgba(255, 255, 255, 0.96);
+  backdrop-filter: blur(10px);
+  box-shadow: 0 2px 20px rgba(0, 0, 0, 0.06);
+  height: 68px;
   position: sticky;
   top: 0;
-  z-index: 100;
+  z-index: 1000;
+  border-bottom: 1px solid rgba(64, 158, 255, 0.12);
 }
 
 .logo {
   display: flex;
   align-items: center;
-  gap: 8px;
-  font-size: 22px;
-  font-weight: bold;
-  color: #409eff;
+  gap: 10px;
+  font-size: 20px;
+  font-weight: 700;
+  background: linear-gradient(135deg, #409eff 0%, #764ba2 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
   cursor: pointer;
   transition: all 0.3s ease;
 }
 
 .logo-emoji {
-  font-size: 28px;
+  font-size: 30px;
+  -webkit-text-fill-color: initial;
+  filter: drop-shadow(0 2px 4px rgba(64,158,255,0.3));
 }
 
 .logo:hover {
-  transform: scale(1.02);
-  color: #66b1ff;
+  transform: scale(1.03);
+  filter: brightness(1.1);
 }
 
 .nav-menu {
   border-bottom: none;
+  background: transparent !important;
   flex: 1;
   justify-content: center;
 }
 
-.nav-menu .el-menu-item {
+.nav-menu :deep(.el-menu-item) {
   font-size: 15px;
   font-weight: 500;
+  border-radius: 8px;
+  margin: 0 4px;
+  transition: all 0.25s;
+  position: relative;
+}
+
+.nav-menu :deep(.el-menu-item.is-active) {
+  background: linear-gradient(135deg, rgba(64,158,255,0.1), rgba(118,75,162,0.08)) !important;
+  color: #409eff !important;
+}
+
+.nav-menu :deep(.el-menu-item.is-active::after) {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 20px;
+  height: 3px;
+  background: linear-gradient(135deg, #409eff, #764ba2);
+  border-radius: 2px;
 }
 
 .cart-badge {
@@ -212,7 +248,7 @@ defineExpose({ updateUserInfo, updateCartCount })
 
 .user-area {
   display: flex;
-  gap: 12px;
+  gap: 10px;
   align-items: center;
 }
 
@@ -221,15 +257,17 @@ defineExpose({ updateUserInfo, updateCartCount })
   align-items: center;
   gap: 10px;
   cursor: pointer;
-  padding: 6px 16px;
+  padding: 6px 14px;
   border-radius: 25px;
   transition: all 0.3s ease;
   background: rgba(64, 158, 255, 0.05);
+  border: 1px solid rgba(64, 158, 255, 0.12);
 }
 
 .user-info:hover {
   background: rgba(64, 158, 255, 0.1);
   transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(64,158,255,0.15);
 }
 
 .avatar {

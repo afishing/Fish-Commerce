@@ -73,4 +73,24 @@ public class UserController {
     public Result<Void> updateEmail(@Valid @RequestBody UpdateEmailDTO updateEmailDTO) {
         return userService.updateEmail(updateEmailDTO);
     }
+
+    /**
+     * 购买会员
+     * @param userId 用户ID
+     * @param vipType 会员类型 1-月卡 2-季卡 3-年卡
+     */
+    @PostMapping("/vip/purchase")
+    public Result<Void> purchaseVip(
+            @RequestParam Long userId,
+            @RequestParam Integer vipType) {
+        return userService.purchaseVip(userId, vipType);
+    }
+
+    /**
+     * 检查会员状态
+     */
+    @GetMapping("/vip/check/{userId}")
+    public Result<Void> checkVipStatus(@PathVariable Long userId) {
+        return userService.checkVipStatus(userId);
+    }
 }

@@ -9,6 +9,8 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
+
 /**
  * 用户服务实现
  */
@@ -164,5 +166,56 @@ public class UserServiceImpl implements UserService {
         userMapper.updateById(user);
         
         return Result.success("邮箱修改成功", null);
+    }
+
+    @Override
+    public Result<Void> purchaseVip(Long userId, Integer vipType) {
+        User user = userMapper.selectById(userId);
+        if (user == null) {
+            return Result.error("用户不存在");
+        }
+
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime baseTime = user.getVipExpireTime() != null && user.getVipExpireTime().isAfter(now)
+                ? user.getVipExpireTime()
+                : now;
+
+        LocalDateTime newExpireTime;
+        switch (vipType) {
+            case 1: // 月卡
+                newExpireTime = baseTime.plusMonths(1);
+                break;
+            case 2: // 季卡
+                newExpireTime = baseTime.plusMonths(3);
+                break;
+            case 3: // 年卡
+                newExpireTime = baseTime.plusYears(1);
+                break;
+            default:
+                return Result.error("无效的会员类型");
+        }
+
+        user.setLevel(vipType);
+        user.setVipExpireTime(newExpireTime);
+        userMapper.updateById(user);
+
+        return Result.success("购买成功", null);
+    }
+
+    @Override
+    public Result<Void> checkVipStatus(Long userId) {
+        User user = userMapper.selectById(userId);
+        if (user == null) {
+            return Result.error("用户不存在");
+        }
+
+        // 如果会员已过期，降级为普通用户
+        if (user.getVipExpireTime() != null && user.getVipExpireTime().isBefore(LocalDateTime.now())) {
+            user.setLevel(0);
+            user.setVipExpireTime(null);
+            userMapper.updateById(user);
+        }
+
+        return Result.success(null);
     }
 }

@@ -2,8 +2,10 @@ package com.afishing.service.impl;
 
 import com.afishing.common.result.Result;
 import com.afishing.entity.Order;
+import com.afishing.entity.OrderItem;
 import com.afishing.entity.Payment;
 import com.afishing.feign.OrderFeignClient;
+import com.afishing.feign.ProductFeignClient;
 import com.afishing.mapper.PaymentMapper;
 import com.afishing.service.PaymentService;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
@@ -13,6 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.List;
 import java.util.UUID;
 
 /**
@@ -26,6 +29,9 @@ public class PaymentServiceImpl implements PaymentService {
 
     @Autowired
     private OrderFeignClient orderFeignClient;
+
+    @Autowired
+    private ProductFeignClient productFeignClient;
 
     @Override
     @Transactional
@@ -85,6 +91,18 @@ public class PaymentServiceImpl implements PaymentService {
 
         // 通过Feign更新订单状态
         orderFeignClient.updatePayStatus(orderId, 2, payment.getPayType());
+
+        // 更新商品销量和库存
+        try {
+            Result<List<OrderItem>> itemsResult = orderFeignClient.getOrderItems(orderId);
+            if (itemsResult != null && itemsResult.getData() != null) {
+                for (OrderItem item : itemsResult.getData()) {
+                    productFeignClient.updateSales(item.getProductId(), item.getQuantity());
+                }
+            }
+        } catch (Exception e) {
+            // 记录错误但不影响支付结果
+        }
 
         return Result.success("支付成功", null);
     }

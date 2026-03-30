@@ -5,6 +5,7 @@ import com.afishing.common.result.Result;
 import com.afishing.dto.CreateOrderDTO;
 import com.afishing.dto.OrderDTO;
 import com.afishing.entity.Order;
+import com.afishing.entity.OrderItem;
 import com.afishing.mapper.OrderMapper;
 import com.afishing.service.OrderService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -112,6 +113,14 @@ public class OrderController {
             @RequestParam Integer status,
             @RequestParam Integer payType) {
         return orderService.updatePayStatus(id, status, payType);
+    }
+
+    /**
+     * 获取订单项列表（供Feign调用）
+     */
+    @GetMapping("/items/{orderId}")
+    public Result<List<OrderItem>> getOrderItems(@PathVariable Long orderId) {
+        return orderService.getOrderItems(orderId);
     }
 
     // ========== 管理员接口 ==========

@@ -4,6 +4,7 @@ import com.afishing.common.result.Result;
 import com.afishing.dto.CreateOrderDTO;
 import com.afishing.dto.OrderDTO;
 import com.afishing.entity.Order;
+import com.afishing.entity.OrderItem;
 
 import java.util.List;
 
@@ -47,4 +48,9 @@ public interface OrderService {
      * 获取所有订单（用于统计）
      */
     Result<List<Order>> getAllOrders();
+
+    /**
+     * 获取订单项列表
+     */
+    Result<List<OrderItem>> getOrderItems(Long orderId);
 }
