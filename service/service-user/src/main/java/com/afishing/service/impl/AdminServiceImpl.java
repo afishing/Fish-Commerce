@@ -291,4 +291,149 @@ public class AdminServiceImpl implements AdminService {
     public Result<Void> deleteProduct(Long productId) {
         return productFeignClient.deleteProduct(productId);
     }
+
+    @Override
+    public Result<UserPortraitDTO> getUserPortrait() {
+        UserPortraitDTO portrait = new UserPortraitDTO();
+
+        // 1. 用户统计
+        portrait.setTotalUsers(userMapper.selectCount(null));
+
+        // 活跃用户（status=0）
+        LambdaQueryWrapper<User> activeWrapper = new LambdaQueryWrapper<>();
+        activeWrapper.eq(User::getStatus, 0);
+        portrait.setActiveUsers(userMapper.selectCount(activeWrapper));
+
+        // 禁用用户（status=1）
+        LambdaQueryWrapper<User> disabledWrapper = new LambdaQueryWrapper<>();
+        disabledWrapper.eq(User::getStatus, 1);
+        portrait.setDisabledUsers(userMapper.selectCount(disabledWrapper));
+
+        // 2. 性别分布
+        LambdaQueryWrapper<User> maleWrapper = new LambdaQueryWrapper<>();
+        maleWrapper.eq(User::getGender, 1);
+        portrait.setMaleCount(userMapper.selectCount(maleWrapper));
+
+        LambdaQueryWrapper<User> femaleWrapper = new LambdaQueryWrapper<>();
+        femaleWrapper.eq(User::getGender, 2);
+        portrait.setFemaleCount(userMapper.selectCount(femaleWrapper));
+
+        LambdaQueryWrapper<User> secretWrapper = new LambdaQueryWrapper<>();
+        secretWrapper.eq(User::getGender, 0).or().isNull(User::getGender);
+        portrait.setSecretCount(userMapper.selectCount(secretWrapper));
+
+        // 3. 消费统计（通过Feign调用订单服务）
+        try {
+            Result<List<Order>> allOrdersResult = orderFeignClient.getAllOrders();
+            if (allOrdersResult.isSuccess() && allOrdersResult.getData() != null) {
+                List<Order> allOrders = allOrdersResult.getData();
+
+                // 按用户分组统计
+                Map<Long, List<Order>> userOrdersMap = allOrders.stream()
+                        .filter(order -> order.getUserId() != null)
+                        .collect(Collectors.groupingBy(Order::getUserId));
+
+                long userWithOrders = userOrdersMap.size();
+                long totalOrders = allOrders.stream()
+                        .filter(order -> order.getStatus() >= 1).count();
+                BigDecimal totalSpend = allOrders.stream()
+                        .filter(order -> order.getStatus() >= 1)
+                        .map(Order::getPayAmount)
+                        .filter(amount -> amount != null)
+                        .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+                // 人均订单数
+                if (userWithOrders > 0) {
+                    portrait.setAvgOrdersPerUser(BigDecimal.valueOf(totalOrders)
+                            .divide(BigDecimal.valueOf(userWithOrders), 2, BigDecimal.ROUND_HALF_UP));
+                    portrait.setAvgSpendPerUser(totalSpend
+                            .divide(BigDecimal.valueOf(userWithOrders), 2, BigDecimal.ROUND_HALF_UP));
+                } else {
+                    portrait.setAvgOrdersPerUser(BigDecimal.ZERO);
+                    portrait.setAvgSpendPerUser(BigDecimal.ZERO);
+                }
+
+                // 4. 消费层次分布
+                Map<String, Long> consumeLevelDist = new HashMap<>();
+                long lowSpend = 0, midSpend = 0, highSpend = 0, vipSpend = 0;
+
+                for (Map.Entry<Long, List<Order>> entry : userOrdersMap.entrySet()) {
+                    BigDecimal userTotal = entry.getValue().stream()
+                            .filter(order -> order.getStatus() >= 1)
+                            .map(Order::getPayAmount)
+                            .filter(amount -> amount != null)
+                            .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+                    if (userTotal.compareTo(new BigDecimal("1000")) < 0) {
+                        lowSpend++;
+                    } else if (userTotal.compareTo(new BigDecimal("5000")) < 0) {
+                        midSpend++;
+                    } else if (userTotal.compareTo(new BigDecimal("10000")) < 0) {
+                        highSpend++;
+                    } else {
+                        vipSpend++;
+                    }
+                }
+                consumeLevelDist.put("低消费(0-1000)", lowSpend);
+                consumeLevelDist.put("中消费(1000-5000)", midSpend);
+                consumeLevelDist.put("高消费(5000-10000)", highSpend);
+                consumeLevelDist.put("VIP(10000+)", vipSpend);
+                portrait.setConsumeLevelDist(consumeLevelDist);
+
+                // 5. TOP5 消费榜单
+                List<UserPortraitDTO.TopConsumerItem> topConsumers = userOrdersMap.entrySet().stream()
+                        .map(entry -> {
+                            UserPortraitDTO.TopConsumerItem item = new UserPortraitDTO.TopConsumerItem();
+                            item.setUserId(entry.getKey());
+
+                            // 获取用户信息
+                            User user = userMapper.selectById(entry.getKey());
+                            if (user != null) {
+                                item.setUsername(user.getUsername());
+                                item.setNickname(user.getNickname());
+                            }
+
+                            // 统计订单数和消费金额
+                            List<Order> orders = entry.getValue();
+                            item.setOrderCount((long) orders.stream()
+                                    .filter(order -> order.getStatus() >= 1).count());
+                            item.setTotalSpend(orders.stream()
+                                    .filter(order -> order.getStatus() >= 1)
+                                    .map(Order::getPayAmount)
+                                    .filter(amount -> amount != null)
+                                    .reduce(BigDecimal.ZERO, BigDecimal::add));
+
+                            return item;
+                        })
+                        .sorted((a, b) -> b.getTotalSpend().compareTo(a.getTotalSpend()))
+                        .limit(5)
+                        .collect(Collectors.toList());
+                portrait.setTopConsumers(topConsumers);
+            }
+        } catch (Exception e) {
+            log.error("获取消费统计失败", e);
+            portrait.setAvgOrdersPerUser(BigDecimal.ZERO);
+            portrait.setAvgSpendPerUser(BigDecimal.ZERO);
+        }
+
+        // 6. 近7日注册趋势
+        List<UserPortraitDTO.RegisterTrendItem> registerTrend = new ArrayList<>();
+        for (int i = 6; i >= 0; i--) {
+            LocalDate date = LocalDate.now().minusDays(i);
+            LocalDateTime dayStart = LocalDateTime.of(date, LocalTime.MIN);
+            LocalDateTime dayEnd = LocalDateTime.of(date, LocalTime.MAX);
+
+            LambdaQueryWrapper<User> dayWrapper = new LambdaQueryWrapper<>();
+            dayWrapper.between(User::getCreateTime, dayStart, dayEnd);
+            long count = userMapper.selectCount(dayWrapper);
+
+            UserPortraitDTO.RegisterTrendItem item = new UserPortraitDTO.RegisterTrendItem();
+            item.setDate(date.toString());
+            item.setCount(count);
+            registerTrend.add(item);
+        }
+        portrait.setRegisterTrend(registerTrend);
+
+        return Result.success(portrait);
+    }
 }

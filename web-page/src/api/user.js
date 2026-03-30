@@ -3,7 +3,7 @@ import request from './request'
 // 用户登录
 export function login(data) {
   return request({
-    url: '/login',
+    url: '/api/user/login',
     method: 'post',
     data
   })
@@ -12,7 +12,7 @@ export function login(data) {
 // 用户注册
 export function register(data) {
   return request({
-    url: '/register',
+    url: '/api/user/register',
     method: 'post',
     data
   })
@@ -21,7 +21,7 @@ export function register(data) {
 // 获取用户信息
 export function getUserInfo(id) {
   return request({
-    url: `/info/${id}`,
+    url: `/api/user/info/${id}`,
     method: 'get'
   })
 }
@@ -29,7 +29,7 @@ export function getUserInfo(id) {
 // 更新用户信息
 export function updateUserInfo(data) {
   return request({
-    url: '/update',
+    url: '/api/user/update',
     method: 'put',
     data
   })
@@ -38,7 +38,7 @@ export function updateUserInfo(data) {
 // 修改密码
 export function updatePassword(data) {
   return request({
-    url: '/password',
+    url: '/api/user/password',
     method: 'post',
     data
   })
@@ -47,7 +47,7 @@ export function updatePassword(data) {
 // 修改手机号
 export function updatePhone(data) {
   return request({
-    url: '/phone',
+    url: '/api/user/phone',
     method: 'post',
     data
   })
@@ -56,7 +56,7 @@ export function updatePhone(data) {
 // 修改邮箱
 export function updateEmail(data) {
   return request({
-    url: '/email',
+    url: '/api/user/email',
     method: 'post',
     data
   })

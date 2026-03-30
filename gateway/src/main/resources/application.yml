@@ -16,6 +16,14 @@ spring:
           lower-case-service-id: true
       # 路由配置
       routes:
+        # 管理员服务路由（放在前面优先匹配）
+        - id: service-admin
+          uri: lb://service-user
+          predicates:
+            - Path=/api/admin/**
+          filters:
+            - StripPrefix=1
+
         # 用户服务路由
         - id: service-user
           uri: lb://service-user

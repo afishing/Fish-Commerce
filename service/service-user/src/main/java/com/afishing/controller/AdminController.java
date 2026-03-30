@@ -137,4 +137,12 @@ public class AdminController {
     public Result<Void> deleteProduct(@PathVariable Long productId) {
         return adminService.deleteProduct(productId);
     }
+
+    /**
+     * 获取用户画像
+     */
+    @GetMapping("/portrait")
+    public Result<UserPortraitDTO> getUserPortrait() {
+        return adminService.getUserPortrait();
+    }
 }

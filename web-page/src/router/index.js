@@ -59,6 +59,11 @@ const routes = [
         component: () => import('../views/AdminDashboard.vue')
       },
       {
+        path: 'portrait',
+        name: 'AdminPortrait',
+        component: () => import('../views/AdminPortrait.vue')
+      },
+      {
         path: 'users',
         name: 'AdminUsers',
         component: () => import('../views/AdminUsers.vue')
@@ -72,6 +77,21 @@ const routes = [
         path: 'products',
         name: 'AdminProducts',
         component: () => import('../views/AdminProducts.vue')
+      },
+      {
+        path: 'gallery',
+        name: 'AdminGallery',
+        component: () => import('../views/AdminGallery.vue')
+      },
+      {
+        path: 'videos',
+        name: 'AdminVideos',
+        component: () => import('../views/AdminVideos.vue')
+      },
+      {
+        path: 'notices',
+        name: 'AdminNotices',
+        component: () => import('../views/AdminNotices.vue')
       }
     ]
   }

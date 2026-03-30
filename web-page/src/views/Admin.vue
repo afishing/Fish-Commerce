@@ -13,14 +13,21 @@
         active-text-color="#409EFF"
         router
       >
-        <el-menu-item index="/admin/dashboard">
-          <el-icon><DataLine /></el-icon>
-          <span>数据概览</span>
-        </el-menu-item>
-        <el-menu-item index="/admin/users">
-          <el-icon><User /></el-icon>
-          <span>用户管理</span>
-        </el-menu-item>
+        <el-sub-menu index="/admin">
+          <template #title>
+            <el-icon><DataLine /></el-icon>
+            <span>控制台</span>
+          </template>
+          <el-menu-item index="/admin/dashboard">数据概览</el-menu-item>
+          <el-menu-item index="/admin/portrait">用户画像</el-menu-item>
+        </el-sub-menu>
+        <el-sub-menu index="/admin/users">
+          <template #title>
+            <el-icon><User /></el-icon>
+            <span>用户管理</span>
+          </template>
+          <el-menu-item index="/admin/users">用户列表</el-menu-item>
+        </el-sub-menu>
         <el-menu-item index="/admin/orders">
           <el-icon><Document /></el-icon>
           <span>订单管理</span>
@@ -29,6 +36,15 @@
           <el-icon><Goods /></el-icon>
           <span>商品管理</span>
         </el-menu-item>
+        <el-sub-menu index="/admin/other">
+          <template #title>
+            <el-icon><Grid /></el-icon>
+            <span>其他模块</span>
+          </template>
+          <el-menu-item index="/admin/gallery">图片管理</el-menu-item>
+          <el-menu-item index="/admin/videos">视频管理</el-menu-item>
+          <el-menu-item index="/admin/notices">公告管理</el-menu-item>
+        </el-sub-menu>
       </el-menu>
     </el-aside>
 
@@ -54,7 +70,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { ElMessage } from 'element-plus'
-import { DataLine, User, Document, Goods } from '@element-plus/icons-vue'
+import { DataLine, User, Document, Goods, ArrowDown, Grid } from '@element-plus/icons-vue'
 
 const router = useRouter()
 const route = useRoute()

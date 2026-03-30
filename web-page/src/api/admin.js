@@ -3,7 +3,7 @@ import request from './request'
 // ========== 管理员登录 ==========
 export function adminLogin(data) {
   return request({
-    url: '/admin/login',
+    url: '/api/admin/login',
     method: 'post',
     data
   })
@@ -12,7 +12,7 @@ export function adminLogin(data) {
 // ========== 统计信息 ==========
 export function getStatistics() {
   return request({
-    url: '/admin/statistics',
+    url: '/api/admin/statistics',
     method: 'get'
   })
 }
@@ -20,7 +20,7 @@ export function getStatistics() {
 // ========== 用户管理 ==========
 export function getUserList(data) {
   return request({
-    url: '/admin/user/list',
+    url: '/api/admin/user/list',
     method: 'post',
     data
   })
@@ -28,14 +28,14 @@ export function getUserList(data) {
 
 export function disableUser(userId) {
   return request({
-    url: `/admin/user/disable/${userId}`,
+    url: `/api/admin/user/disable/${userId}`,
     method: 'put'
   })
 }
 
 export function enableUser(userId) {
   return request({
-    url: `/admin/user/enable/${userId}`,
+    url: `/api/admin/user/enable/${userId}`,
     method: 'put'
   })
 }
@@ -43,7 +43,7 @@ export function enableUser(userId) {
 // ========== 订单管理 ==========
 export function getOrderList(params) {
   return request({
-    url: '/admin/order/list',
+    url: '/api/admin/order/list',
     method: 'get',
     params
   })
@@ -51,7 +51,7 @@ export function getOrderList(params) {
 
 export function shipOrder(orderId) {
   return request({
-    url: `/admin/order/ship/${orderId}`,
+    url: `/api/admin/order/ship/${orderId}`,
     method: 'put'
   })
 }
@@ -59,7 +59,7 @@ export function shipOrder(orderId) {
 // ========== 商品管理 ==========
 export function getProductList(params) {
   return request({
-    url: '/admin/product/list',
+    url: '/api/admin/product/list',
     method: 'get',
     params
   })
@@ -67,7 +67,7 @@ export function getProductList(params) {
 
 export function addProduct(data) {
   return request({
-    url: '/admin/product/add',
+    url: '/api/admin/product/add',
     method: 'post',
     data
   })
@@ -75,7 +75,7 @@ export function addProduct(data) {
 
 export function updateProduct(data) {
   return request({
-    url: '/admin/product/update',
+    url: '/api/admin/product/update',
     method: 'put',
     data
   })
@@ -83,21 +83,29 @@ export function updateProduct(data) {
 
 export function enableProduct(productId) {
   return request({
-    url: `/admin/product/enable/${productId}`,
+    url: `/api/admin/product/enable/${productId}`,
     method: 'put'
   })
 }
 
 export function disableProduct(productId) {
   return request({
-    url: `/admin/product/disable/${productId}`,
+    url: `/api/admin/product/disable/${productId}`,
     method: 'put'
   })
 }
 
 export function deleteProduct(productId) {
   return request({
-    url: `/admin/product/delete/${productId}`,
+    url: `/api/admin/product/delete/${productId}`,
     method: 'delete'
+  })
+}
+
+// ========== 用户画像 ==========
+export function getUserPortrait() {
+  return request({
+    url: '/api/admin/portrait',
+    method: 'get'
   })
 }

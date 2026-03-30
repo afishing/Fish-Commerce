@@ -3,7 +3,7 @@ import { ElMessage } from 'element-plus'
 
 // 创建 axios 实例 - 通过Gateway网关访问
 const request = axios.create({
-  baseURL: 'http://localhost:5000/api/user',
+  baseURL: 'http://localhost:5000',
   timeout: 10000
 })
 

@@ -1,9 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<project version="4">
-  <component name="DataSourcePerFileMappings">
-    <file url="file://$PROJECT_DIR$/sql/alter_user_add_birthday.sql" value="5b72b89a-0d8d-4cb2-a41d-1d30c4132eec" />
-    <file url="file://$PROJECT_DIR$/sql/alter_user_add_role.sql" value="5b72b89a-0d8d-4cb2-a41d-1d30c4132eec" />
-    <file url="file://$PROJECT_DIR$/sql/init.sql" value="5b72b89a-0d8d-4cb2-a41d-1d30c4132eec" />
-    <file url="file://$PROJECT_DIR$/sql/update_avatar.sql" value="5b72b89a-0d8d-4cb2-a41d-1d30c4132eec" />
-  </component>
-</project>

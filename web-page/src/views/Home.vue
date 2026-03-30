@@ -110,6 +110,9 @@
     
     <!-- 回到顶部按钮 -->
     <el-backtop :visibility-height="200" />
+
+    <!-- AI 小猫咪助手 -->
+    <DancingCharacter />
   </div>
 </template>
 
@@ -122,6 +125,7 @@ import {
   Phone, Message, Star
 } from '@element-plus/icons-vue'
 import AppHeader from '@/components/AppHeader.vue'
+import DancingCharacter from '@/components/DancingCharacter.vue'
 import { addToCart as addToCartApi } from '@/api/cart'
 import { getProductList } from '@/api/product'
 import { getImageUrl } from '@/utils/image'

@@ -66,4 +66,9 @@ public interface AdminService {
      * 删除商品
      */
     Result<Void> deleteProduct(Long productId);
+
+    /**
+     * 获取用户画像
+     */
+    Result<UserPortraitDTO> getUserPortrait();
 }

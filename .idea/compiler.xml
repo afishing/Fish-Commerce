@@ -6,10 +6,12 @@
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
+        <module name="service-ai" />
+        <module name="service-cart" />
         <module name="service-product" />
         <module name="service-user" />
-        <module name="service-cart" />
         <module name="model" />
+        <module name="service-video" />
         <module name="service-order" />
         <module name="service-pay" />
         <module name="gateway" />
@@ -22,11 +24,13 @@
       <module name="gateway" options="-parameters" />
       <module name="model" options="-parameters" />
       <module name="service" options="" />
+      <module name="service-ai" options="-parameters" />
       <module name="service-cart" options="-parameters" />
       <module name="service-order" options="-parameters" />
       <module name="service-pay" options="-parameters" />
       <module name="service-product" options="-parameters" />
       <module name="service-user" options="-parameters" />
+      <module name="service-video" options="-parameters" />
     </option>
   </component>
 </project>
