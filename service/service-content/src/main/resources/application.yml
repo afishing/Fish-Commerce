@@ -1,0 +1,26 @@
+server:
+  port: 9200
+
+spring:
+  application:
+    name: service-content
+  cloud:
+    nacos:
+      discovery:
+        server-addr: 127.0.0.1:8848
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://localhost:3306/fish_content?useUnicode=true&characterEncoding=utf-8&useSSL=false&serverTimezone=Asia/Shanghai
+    username: root
+    password: wsp0222.
+
+mybatis-plus:
+  mapper-locations: classpath:mapper/**/*.xml
+  type-aliases-package: com.afishing.entity
+  configuration:
+    map-underscore-to-camel-case: true
+
+file:
+  upload:
+    path: E:/Desktop/Code/afishing/Fish-Commerce/uploads/
+

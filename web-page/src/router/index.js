@@ -69,11 +69,6 @@ const routes = [
         component: () => import('../views/AdminUsers.vue')
       },
       {
-        path: 'reviews',
-        name: 'AdminReviews',
-        component: () => import('../views/AdminReviews.vue')
-      },
-      {
         path: 'orders',
         name: 'AdminOrders',
         component: () => import('../views/AdminOrders.vue')
@@ -84,29 +79,24 @@ const routes = [
         component: () => import('../views/AdminProducts.vue')
       },
       {
-        path: 'gallery',
-        name: 'AdminGallery',
-        component: () => import('../views/AdminGallery.vue')
-      },
-      {
-        path: 'videos',
-        name: 'AdminVideos',
-        component: () => import('../views/AdminVideos.vue')
-      },
-      {
-        path: 'notices',
-        name: 'AdminNotices',
-        component: () => import('../views/AdminNotices.vue')
-      },
-      {
         path: 'tags',
         name: 'AdminTags',
         component: () => import('../views/AdminTags.vue')
       },
       {
-        path: 'coupons',
-        name: 'AdminCoupons',
-        component: () => import('../views/AdminCoupons.vue')
+        path: 'gallery',
+        name: 'AdminGallery',
+        component: () => import('../views/AdminGallery.vue')
+      },
+      {
+        path: 'video',
+        name: 'AdminVideo',
+        component: () => import('../views/AdminVideo.vue')
+      },
+      {
+        path: 'notice',
+        name: 'AdminNotice',
+        component: () => import('../views/AdminNotice.vue')
       }
     ]
   }

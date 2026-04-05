@@ -84,15 +84,25 @@ spring:
           predicates:
             - Path=/upload/**
 
-        # 视频服务路由
+        # 视频服务路由（在service-content中）
         - id: service-video
-          uri: lb://service-video
+          uri: lb://service-content
           predicates:
-            - Path=/video/**
+            - Path=/api/video/**
+          filters:
+            - StripPrefix=1
 
-        # 公告服务路由（在service-product中）
+        # 图库服务路由（在service-content中）
+        - id: service-gallery
+          uri: lb://service-content
+          predicates:
+            - Path=/api/gallery/**
+          filters:
+            - StripPrefix=1
+
+        # 公告服务路由（在service-content中）
         - id: service-notice
-          uri: lb://service-product
+          uri: lb://service-content
           predicates:
             - Path=/api/notice/**
           filters:

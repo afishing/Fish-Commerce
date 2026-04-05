@@ -52,8 +52,8 @@
             <span>其他模块</span>
           </template>
           <el-menu-item index="/admin/gallery"><el-icon><Picture /></el-icon>图片管理</el-menu-item>
-          <el-menu-item index="/admin/videos"><el-icon><VideoPlay /></el-icon>视频管理</el-menu-item>
-          <el-menu-item index="/admin/notices"><el-icon><Bell /></el-icon>公告管理</el-menu-item>
+          <el-menu-item index="/admin/video"><el-icon><VideoPlay /></el-icon>视频管理</el-menu-item>
+          <el-menu-item index="/admin/notice"><el-icon><Bell /></el-icon>公告管理</el-menu-item>
         </el-sub-menu>
       </el-menu>
       <div class="sidebar-footer">

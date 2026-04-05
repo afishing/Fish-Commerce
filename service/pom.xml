@@ -18,7 +18,7 @@
         <module>service-pay</module>
         <module>service-cart</module>
         <module>service-ai</module>
-        <module>service-video</module>
+        <module>service-content</module>
     </modules>
 
     <artifactId>service</artifactId>
