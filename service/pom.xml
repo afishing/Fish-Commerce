@@ -18,7 +18,7 @@
         <module>service-pay</module>
         <module>service-cart</module>
         <module>service-ai</module>
-        <module>service-video</module>
+        <module>service-content</module>
     </modules>
 
     <artifactId>service</artifactId>
@@ -52,6 +52,12 @@
         <dependency>
             <groupId>org.springframework.cloud</groupId>
             <artifactId>spring-cloud-starter-bootstrap</artifactId>
+        </dependency>
+
+        <!-- Spring Boot Actuator -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-actuator</artifactId>
         </dependency>
 
     </dependencies>

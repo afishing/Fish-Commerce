@@ -84,9 +84,14 @@ const routes = [
         component: () => import('../views/AdminProducts.vue')
       },
       {
-        path: 'gallery',
-        name: 'AdminGallery',
-        component: () => import('../views/AdminGallery.vue')
+        path: 'categories',
+        name: 'AdminCategories',
+        component: () => import('../views/AdminCategories.vue')
+      },
+      {
+        path: 'tags',
+        name: 'AdminTags',
+        component: () => import('../views/AdminTags.vue')
       },
       {
         path: 'videos',
@@ -99,14 +104,19 @@ const routes = [
         component: () => import('../views/AdminNotices.vue')
       },
       {
-        path: 'tags',
-        name: 'AdminTags',
-        component: () => import('../views/AdminTags.vue')
+        path: 'gallery',
+        name: 'AdminGallery',
+        component: () => import('../views/AdminGallery.vue')
       },
       {
-        path: 'coupons',
-        name: 'AdminCoupons',
-        component: () => import('../views/AdminCoupons.vue')
+        path: 'stock',
+        name: 'AdminStock',
+        component: () => import('../views/AdminStock.vue')
+      },
+      {
+        path: 'monitor',
+        name: 'AdminMonitor',
+        component: () => import('../views/AdminMonitor.vue')
       }
     ]
   }

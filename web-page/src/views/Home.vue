@@ -53,7 +53,7 @@
         <div class="section-line"></div>
       </div>
       <div class="category-grid">
-        <div class="category-card" v-for="cat in categories" :key="cat.id" @click="$router.push('/products')">
+        <div class="category-card" v-for="cat in categories" :key="cat.id" @click="$router.push(`/products?categoryId=${cat.id}`)">
           <div class="icon-wrapper">{{ cat.icon }}</div>
           <div class="name">{{ cat.name }}</div>
         </div>
@@ -178,6 +178,7 @@ import { addToCart as addToCartApi } from '@/api/cart'
 import { getProductList, getBannerProducts } from '@/api/product'
 import { getImageUrl } from '@/utils/image'
 import { getActiveNotices } from '@/api/notice'
+import { getCategoryList } from '@/api/category'
 
 const router = useRouter()
 
@@ -211,14 +212,29 @@ const loadBannerProducts = async () => {
   }
 }
 
-const categories = reactive([
-  { id: 1, name: '海鲜鱼类', icon: '🐟' },
-  { id: 2, name: '虾蟹贝类', icon: '🦐' },
-  { id: 3, name: '冷冻食品', icon: '🧊' },
-  { id: 4, name: '水产干货', icon: '🦑' },
-  { id: 5, name: '特色美食', icon: '🍣' },
-  { id: 6, name: '限时特惠', icon: '🔥' }
-])
+const categories = reactive([])
+
+// 加载分类列表
+const loadCategories = async () => {
+  try {
+    const res = await getCategoryList()
+    if (res.data && res.data.length > 0) {
+      categories.length = 0
+      categories.push(...res.data)
+    }
+  } catch (error) {
+    console.error('加载分类失败:', error)
+    // 使用默认分类
+    categories.push(
+      { id: 1, name: '海鲜鱼类', icon: '🐟' },
+      { id: 2, name: '虾蟹贝类', icon: '🦐' },
+      { id: 3, name: '冷冻食品', icon: '🧊' },
+      { id: 4, name: '水产干货', icon: '🦑' },
+      { id: 5, name: '特色美食', icon: '🍣' },
+      { id: 6, name: '限时特惠', icon: '🔥' }
+    )
+  }
+}
 
 // 热门商品无限滚动相关
 const hotProducts = reactive([])
@@ -322,6 +338,7 @@ const handleScroll = () => {
 
 onMounted(() => {
   loadBannerProducts()
+  loadCategories()
   loadProducts()
   loadAndShowNotices()
   window.addEventListener('scroll', handleScroll)

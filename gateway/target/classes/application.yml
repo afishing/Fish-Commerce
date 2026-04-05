@@ -72,27 +72,27 @@ spring:
           filters:
             - StripPrefix=1
 
-        # 静态资源路由（图片访问）
-        - id: service-product-static
-          uri: lb://service-product
+        # 静态资源路由（图片访问）- 路由到service-content
+        - id: service-content-static
+          uri: lb://service-content
           predicates:
             - Path=/uploads/**
 
-        # 文件上传路由
-        - id: service-product-upload
-          uri: lb://service-product
+        # 文件上传路由 - 路由到service-content
+        - id: service-content-upload
+          uri: lb://service-content
           predicates:
             - Path=/upload/**
 
-        # 视频服务路由
-        - id: service-video
-          uri: lb://service-video
+        # 视频服务路由 - 路由到service-content
+        - id: service-content-video
+          uri: lb://service-content
           predicates:
             - Path=/video/**
 
-        # 公告服务路由（在service-product中）
-        - id: service-notice
-          uri: lb://service-product
+        # 公告服务路由 - 路由到service-content
+        - id: service-content-notice
+          uri: lb://service-content
           predicates:
             - Path=/api/notice/**
           filters:
@@ -103,6 +103,14 @@ spring:
           uri: lb://service-product
           predicates:
             - Path=/api/tag/**
+          filters:
+            - StripPrefix=1
+
+        # 分类服务路由（在service-product中）
+        - id: service-category
+          uri: lb://service-product
+          predicates:
+            - Path=/api/category/**
           filters:
             - StripPrefix=1
 
@@ -125,6 +133,16 @@ spring.cloud.sentinel:
   transport:
     dashboard: localhost:8080
   eager: true
+
+# 暴露actuator端点
+management:
+  endpoints:
+    web:
+      exposure:
+        include: '*'
+  endpoint:
+    health:
+      show-details: always
 
 # 日志级别
 logging:
