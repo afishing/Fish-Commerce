@@ -152,6 +152,14 @@ const statistics = ref({
 const loading = ref(false)
 
 const fetchStatistics = async () => {
+  // 检查是否已登录
+  const adminInfo = localStorage.getItem('adminInfo')
+  if (!adminInfo) {
+    ElMessage.warning('请先登录')
+    router.push('/admin/login')
+    return
+  }
+  
   loading.value = true
   try {
     const res = await getStatistics()
@@ -161,7 +169,7 @@ const fetchStatistics = async () => {
       ElMessage.error(res.message || '获取统计数据失败')
     }
   } catch (error) {
-    ElMessage.error('获取统计数据失败')
+    // 401 错误不显示提示，由 request.js 统一处理
   } finally {
     loading.value = false
   }

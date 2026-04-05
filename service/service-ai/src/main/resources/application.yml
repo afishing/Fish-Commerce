@@ -1,0 +1,14 @@
+spring:
+  application:
+    name: service-ai
+  cloud:
+    nacos:
+      server-addr: 127.0.0.1:8848
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration
+      - org.springframework.boot.autoconfigure.jdbc.DataSourceTransactionManagerAutoConfiguration
+      - com.baomidou.mybatisplus.autoconfigure.MybatisPlusAutoConfiguration
+
+server:
+  port: 9800

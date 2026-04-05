@@ -1,0 +1,22 @@
+spring:
+  application:
+    name: monitor
+  cloud:
+    nacos:
+      server-addr: 127.0.0.1:8848
+  security:
+    user:
+      name: admin
+      password: admin
+
+server:
+  port: 8080
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+  endpoint:
+    health:
+      show-details: always

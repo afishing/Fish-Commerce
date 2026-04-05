@@ -72,11 +72,17 @@ spring:
           filters:
             - StripPrefix=1
 
-        # 静态资源路由（图片访问）- 路由到service-content
+        # 静态资源路由（图片访问）- 路由到 service-content
         - id: service-content-static
           uri: lb://service-content
           predicates:
             - Path=/uploads/**
+        
+        # 分类图标等静态图片资源
+        - id: service-content-images
+          uri: lb://service-content
+          predicates:
+            - Path=/imgs/**
 
         # 文件上传路由 - 路由到service-content
         - id: service-content-upload
@@ -98,7 +104,7 @@ spring:
           filters:
             - StripPrefix=1
 
-        # 标签服务路由（在service-product中）
+        # 标签服务路由（在 service-product 中，使用 fish_product 库）
         - id: service-tag
           uri: lb://service-product
           predicates:
@@ -106,7 +112,7 @@ spring:
           filters:
             - StripPrefix=1
 
-        # 分类服务路由（在service-product中）
+        # 分类服务路由（在 service-product 中，使用 fish_product 库）
         - id: service-category
           uri: lb://service-product
           predicates:

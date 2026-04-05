@@ -160,9 +160,8 @@
         <el-form-item label="商品主图">
           <el-upload
             class="product-image-uploader"
-            action="http://localhost:5000/upload"
             :show-file-list="false"
-            :on-success="handleImageSuccess"
+            :http-request="uploadProductImage"
             :before-upload="beforeImageUpload"
             accept="image/*"
           >
@@ -375,6 +374,7 @@ import { getGalleryList } from '../api/gallery'
 import { setBanner } from '../api/product'
 import { getAllTags, getProductTags, setProductTags } from '../api/tag'
 import { getAllCategories } from '../api/category'
+import { uploadGalleryImage } from '../api/gallery'
 
 // 分类相关
 const categoryList = ref([])
@@ -820,12 +820,21 @@ const formatDate = (dateStr) => {
 }
 
 // 图片上传相关
-const handleImageSuccess = (response) => {
-  if (response.success) {
-    productForm.mainImage = response.data
-    ElMessage.success('图片上传成功')
-  } else {
-    ElMessage.error(response.message || '图片上传失败')
+const uploadProductImage = async (options) => {
+  const { file } = options
+  const formData = new FormData()
+  formData.append('file', file)
+  
+  try {
+    const res = await uploadGalleryImage(formData)
+    if (res.success) {
+      productForm.mainImage = res.data
+      ElMessage.success('图片上传成功')
+    } else {
+      ElMessage.error(res.message || '图片上传失败')
+    }
+  } catch (error) {
+    ElMessage.error('图片上传失败')
   }
 }
 

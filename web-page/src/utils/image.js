@@ -10,13 +10,13 @@
 export function getImageUrl(url) {
   if (!url) return ''
   
-  // 如果已经是完整URL，直接返回
+  // 如果已经是完整 URL，直接返回
   if (url.startsWith('http://') || url.startsWith('https://')) {
     return url
   }
   
-  // 本地图片，通过Gateway网关访问
-  if (url.startsWith('/uploads/')) {
+  // 本地图片，通过 Gateway 网关访问
+  if (url.startsWith('/uploads/') || url.startsWith('/imgs/')) {
     return `http://localhost:5000${url}`
   }
   

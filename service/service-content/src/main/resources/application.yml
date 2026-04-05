@@ -1,0 +1,32 @@
+spring:
+  application:
+    name: service-content
+  cloud:
+    nacos:
+      server-addr: 127.0.0.1:8848
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://localhost:3306/fish_content?useUnicode=true&characterEncoding=utf-8&useSSL=false&serverTimezone=Asia/Shanghai
+    username: root
+    password: wsp0222.
+
+server:
+  port: 9700
+
+mybatis-plus:
+  mapper-locations: classpath:mapper/**/*.xml
+  type-aliases-package: com.afishing.entity
+  configuration:
+    map-underscore-to-camel-case: true
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+
+# 文件上传配置
+file:
+  upload:
+    path: E:/Desktop/Code/afishing/Fish-Commerce/uploads/
+  access:
+    url: /uploads/
+
+# 静态资源映射
+spring.web.resources.static-locations: classpath:/static/,file:E:/Desktop/Code/afishing/Fish-Commerce/uploads/,file:E:/Desktop/Code/afishing/Fish-Commerce/web-page/public/
+spring.mvc.static-path-pattern: /**

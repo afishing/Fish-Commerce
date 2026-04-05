@@ -356,13 +356,13 @@ const loadAndShowNotices = async () => {
     if (notices.length > 0) {
       notices.forEach((notice, index) => {
         setTimeout(() => {
-          const noticeType = notice.type === 1 ? 'info' : notice.type === 2 ? 'success' : 'warning'
+          const noticeType = notice.type === 'system' ? 'info' : notice.type === 'activity' ? 'success' : 'warning'
           ElNotification({
             title: notice.title,
             message: notice.content,
             type: noticeType,
             position: 'top-right',
-            duration: 5000, // 5秒后自动关闭（悬停时暂停）
+            duration: 5000, // 5 秒后自动关闭（悬停时暂停）
             offset: index * 120
           })
         }, index * 300) // 错开显示时间

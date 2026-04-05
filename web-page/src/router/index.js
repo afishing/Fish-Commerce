@@ -127,4 +127,27 @@ const router = createRouter({
   routes
 })
 
+// 路由守卫 - 保护管理后台路由
+router.beforeEach((to, from, next) => {
+  // 检查是否是管理后台路由
+  if (to.path.startsWith('/admin')) {
+    // 如果是登录页面，直接放行
+    if (to.path === '/admin/login') {
+      next()
+    } else {
+      // 其他管理后台页面需要登录
+      const adminInfo = localStorage.getItem('adminInfo')
+      
+      if (adminInfo) {
+        next()
+      } else {
+        // 未登录，重定向到登录页
+        next('/admin/login')
+      }
+    }
+  } else {
+    next()
+  }
+})
+
 export default router
