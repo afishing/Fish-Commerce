@@ -67,6 +67,73 @@ Fish-Commerce/
 | 系统监控 | 系统信息、内存监控、线程监控、CPU 监控 |
 | 管理员后台 | 数据统计、用户/商品/订单管理、公告/图库/视频审核 |
 
+## 数据库设计
+
+数据库采用 MySQL 8.0，字符集 `utf8mb4`，按业务拆分为 8 个独立数据库：
+
+### fish_user（用户库）
+
+| 表名 | 说明 | 关键字段 |
+|------|------|----------|
+| `user` | 用户表 | username, password, nickname, email, phone, gender, avatar, birthday, level, vip_expire_time, status, role |
+| `address` | 收货地址表 | user_id, receiver_name, receiver_phone, province, city, district, detail, is_default |
+| `user_coupon` | 用户优惠券表 | user_id, coupon_id, status, receive_time, use_time, order_id |
+
+### fish_product（商品库）
+
+| 表名 | 说明 | 关键字段 |
+|------|------|----------|
+| `product` | 商品表 | name, description, category_id, price, original_price, stock, sales, main_image, specs, origin, weight, shelf_life, storage, status, detail_images, detail, is_banner, banner_sort |
+| `category` | 商品分类表 | name, icon, sort, status |
+| `tag` | 商品标签表 | name, color |
+| `product_tag` | 商品标签关联表 | product_id, tag_id |
+| `review` | 商品评论表 | product_id, user_id, username, rating, content |
+| `specification` | 商品规格表 | name, value, sort_order |
+| `spec_group` | 规格组表 | name, sort_order, status |
+| `spec_value` | 规格值表 | group_id, value, sort_order |
+| `coupon` | 优惠券表 | name, type, value, min_amount, total_count, received_count, limit_per_user, start_time, end_time, status, product_ids, member_levels |
+| `gallery_image` | 图库图片表 | filename, original_name, url, size, mime_type, remark |
+| `notice` | 公告表 | title, content, type, status, sort_order, start_time, end_time |
+
+### fish_order（订单库）
+
+| 表名 | 说明 | 关键字段 |
+|------|------|----------|
+| `order` | 订单表 | order_no, user_id, receiver_name, receiver_phone, receiver_address, total_amount, freight, pay_amount, pay_type, pay_time, status, remark |
+| `order_item` | 订单明细表 | order_id, product_id, product_name, product_image, product_spec, price, quantity, total_amount |
+
+### fish_cart（购物车库）
+
+| 表名 | 说明 | 关键字段 |
+|------|------|----------|
+| `cart` | 购物车表 | user_id, product_id, product_name, product_image, product_spec, price, quantity, selected |
+
+### fish_pay（支付库）
+
+| 表名 | 说明 | 关键字段 |
+|------|------|----------|
+| `payment` | 支付记录表 | order_id, order_no, user_id, pay_amount, pay_type, status, transaction_no, pay_time |
+
+### fish_content（内容库）
+
+| 表名 | 说明 | 关键字段 |
+|------|------|----------|
+| `gallery_image` | 图库图片表 | filename, original_name, url, size, mime_type, remark |
+| `notice` | 公告表 | title, content, type, status, sort_order, start_time, end_time |
+| `video` | 视频表 | title, filename, original_name, url, size, duration, mime_type, description, cover_url |
+
+### fish_marketing（营销库）
+
+| 表名 | 说明 | 关键字段 |
+|------|------|----------|
+| `coupon` | 优惠券表 | name, type, value, min_amount, total_count, received_count, limit_per_user, start_time, end_time, status, product_ids |
+
+### fish_video（视频库）
+
+| 表名 | 说明 | 关键字段 |
+|------|------|----------|
+| `video` | 视频管理表 | title, filename, original_name, url, size, duration, mime_type, description, cover_url |
+
 ## 环境要求
 
 - **JDK** 17+
