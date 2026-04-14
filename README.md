@@ -193,6 +193,40 @@ npm run dev
 | RabbitMQ | 5672 |
 | Redis | 6379 |
 
+## 界面预览
+
+### 用户端
+
+| 首页 | AI 智能助手 | 商品列表 |
+|------|------------|----------|
+| ![首页](uploads/screenshot/img.png) | ![AI助手](uploads/screenshot/img_1.png) | ![商品列表](uploads/screenshot/img_2.png) |
+
+| 购物车 | 商品详情 | 订单确认 |
+|--------|----------|----------|
+| ![购物车](uploads/screenshot/img_3.png) | ![商品详情](uploads/screenshot/img_4.png) | ![订单确认](uploads/screenshot/img_5.png) |
+
+### 管理后台
+
+| 数据概览 | 用户画像 | 用户列表 |
+|----------|----------|----------|
+| ![数据概览](uploads/screenshot/img_6.png) | ![用户画像](uploads/screenshot/img_7.png) | ![用户列表](uploads/screenshot/img_8.png) |
+
+| 评论管理 | 订单管理 | 商品管理 |
+|----------|----------|----------|
+| ![评论管理](uploads/screenshot/img_9.png) | ![订单管理](uploads/screenshot/img_10.png) | ![商品管理](uploads/screenshot/img_11.png) |
+
+| 商品详情编辑 | 分类管理 | 标签管理 |
+|--------------|----------|----------|
+| ![商品详情编辑](uploads/screenshot/img_12.png) | ![分类管理](uploads/screenshot/img_13.png) | ![标签管理](uploads/screenshot/img_14.png) |
+
+| 库存管理 | 图片管理 | 视频管理 |
+|----------|----------|----------|
+| ![库存管理](uploads/screenshot/img_15.png) | ![图片管理](uploads/screenshot/img_16.png) | ![视频管理](uploads/screenshot/img_17.png) |
+
+| 公告管理 | 系统监控 | 服务详情 |
+|----------|----------|----------|
+| ![公告管理](uploads/screenshot/img_18.png) | ![系统监控](uploads/screenshot/img_19.png) | ![服务详情](uploads/screenshot/img_20.png) |
+
 ## 开发规范
 
 - 遵循阿里巴巴 Java 开发手册
