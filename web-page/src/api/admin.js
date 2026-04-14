@@ -59,7 +59,7 @@ export function shipOrder(orderId) {
 // ========== 商品管理 ==========
 export function getProductList(params) {
   return request({
-    url: '/api/admin/product/list',
+    url: '/api/product/admin/list',
     method: 'get',
     params
   })
@@ -122,6 +122,51 @@ export function getProductDetail(productId) {
 export function getUserPortrait() {
   return request({
     url: '/api/admin/portrait',
+    method: 'get'
+  })
+}
+
+// ========== 评论管理 ==========
+export function getAllReviews(params) {
+  return request({
+    url: '/api/product/admin/reviews',
+    method: 'get',
+    params
+  })
+}
+
+export function deleteReview(reviewId) {
+  return request({
+    url: `/api/product/review/delete/${reviewId}`,
+    method: 'delete'
+  })
+}
+
+// ========== 系统监控 ==========
+export function getMonitorInfo() {
+  return request({
+    url: '/api/monitor/info',
+    method: 'get'
+  })
+}
+
+export function getMonitorMemory() {
+  return request({
+    url: '/api/monitor/memory',
+    method: 'get'
+  })
+}
+
+export function getMonitorThreads() {
+  return request({
+    url: '/api/monitor/threads',
+    method: 'get'
+  })
+}
+
+export function getMonitorCpu() {
+  return request({
+    url: '/api/monitor/cpu',
     method: 'get'
   })
 }

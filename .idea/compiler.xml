@@ -11,21 +11,27 @@
         <module name="service-product" />
         <module name="service-user" />
         <module name="model" />
-        <module name="service-video" />
+        <module name="monitor" />
         <module name="service-order" />
         <module name="service-pay" />
+        <module name="service-content" />
         <module name="gateway" />
       </profile>
     </annotationProcessing>
+    <bytecodeTargetLevel>
+      <module name="service-video" target="17" />
+    </bytecodeTargetLevel>
   </component>
   <component name="JavacSettings">
     <option name="ADDITIONAL_OPTIONS_OVERRIDE">
       <module name="Fish-Commerce" options="" />
       <module name="gateway" options="-parameters" />
       <module name="model" options="-parameters" />
+      <module name="monitor" options="-parameters" />
       <module name="service" options="" />
       <module name="service-ai" options="-parameters" />
       <module name="service-cart" options="-parameters" />
+      <module name="service-content" options="-parameters" />
       <module name="service-order" options="-parameters" />
       <module name="service-pay" options="-parameters" />
       <module name="service-product" options="-parameters" />

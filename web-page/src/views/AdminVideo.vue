@@ -25,23 +25,9 @@
         <el-table-column prop="description" label="描述" />
         <el-table-column label="预览" width="200">
           <template #default="{ row }">
-            <video v-if="row.url" :src="row.url" controls style="width: 180px; height: 100px"></video>
+            <video v-if="row.url" :src="getImageUrl(row.url)" controls style="width: 180px; height: 100px"></video>
           </template>
         </el-table-column>
-        <el-table-column prop="duration" label="时长(秒)" width="100" />
-        <el-table-column prop="fileSize" label="大小" width="100">
-          <template #default="{ row }">
-            {{ formatSize(row.fileSize) }}
-          </template>
-        </el-table-column>
-        <el-table-column prop="status" label="状态" width="80">
-          <template #default="{ row }">
-            <el-tag :type="row.status === 1 ? 'success' : 'danger'">
-              {{ row.status === 1 ? '启用' : '禁用' }}
-            </el-tag>
-          </template>
-        </el-table-column>
-        <el-table-column prop="createTime" label="创建时间" width="180" />
         <el-table-column label="操作" width="150">
           <template #default="{ row }">
             <el-button size="small" @click="showEditDialog(row)">编辑</el-button>
@@ -74,18 +60,6 @@
         <el-form-item label="视频URL">
           <el-input v-model="form.url" placeholder="输入视频链接" />
         </el-form-item>
-        <el-form-item label="封面URL">
-          <el-input v-model="form.coverUrl" placeholder="输入封面图片链接" />
-        </el-form-item>
-        <el-form-item label="时长(秒)">
-          <el-input-number v-model="form.duration" :min="0" />
-        </el-form-item>
-        <el-form-item label="状态">
-          <el-switch v-model="form.status" :active-value="1" :inactive-value="0" />
-        </el-form-item>
-        <el-form-item label="排序">
-          <el-input-number v-model="form.sort" :min="0" />
-        </el-form-item>
       </el-form>
       <template #footer>
         <el-button @click="dialogVisible = false">取消</el-button>
@@ -99,6 +73,7 @@
 import { ref, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { getVideoList, addVideo, updateVideo, deleteVideo, uploadVideo } from '@/api/video'
+import { getImageUrl } from '@/utils/image'
 
 const loading = ref(false)
 const videoList = ref([])
@@ -113,11 +88,7 @@ const form = reactive({
   id: null,
   title: '',
   description: '',
-  url: '',
-  coverUrl: '',
-  duration: 0,
-  status: 1,
-  sort: 0
+  url: ''
 })
 
 const loadVideos = async () => {
@@ -174,11 +145,7 @@ const showAddDialog = () => {
     id: null,
     title: '',
     description: '',
-    url: '',
-    coverUrl: '',
-    duration: 0,
-    status: 1,
-    sort: 0
+    url: ''
   })
   dialogVisible.value = true
 }
@@ -218,14 +185,6 @@ const handleDelete = (row) => {
       ElMessage.error('删除失败')
     }
   })
-}
-
-const formatSize = (bytes) => {
-  if (!bytes) return '-'
-  if (bytes < 1024) return bytes + ' B'
-  if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(2) + ' KB'
-  if (bytes < 1024 * 1024 * 1024) return (bytes / 1024 / 1024).toFixed(2) + ' MB'
-  return (bytes / 1024 / 1024 / 1024).toFixed(2) + ' GB'
 }
 
 onMounted(() => {

@@ -107,7 +107,7 @@ public class GalleryController {
     /**
      * 批量删除图片
      */
-    @DeleteMapping("/delete/batch")
+    @PostMapping("/delete/batch")
     public Result<Void> batchDeleteImages(@RequestBody List<Long> ids) {
         for (Long id : ids) {
             GalleryImage image = galleryImageMapper.selectById(id);

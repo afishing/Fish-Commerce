@@ -81,3 +81,12 @@ export function setBanner(id, isBanner, bannerSort = 0) {
     params: { isBanner, bannerSort }
   })
 }
+
+// 更新商品库存
+export function updateProductStock(id, quantity) {
+  return productRequest({
+    url: `/stock/${id}`,
+    method: 'put',
+    params: { quantity }
+  })
+}

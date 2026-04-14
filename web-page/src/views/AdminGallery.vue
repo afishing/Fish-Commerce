@@ -13,6 +13,7 @@
               :before-upload="beforeUpload"
               :http-request="handleUpload"
               accept="image/*"
+              multiple
               style="display: inline-block; margin-left: 12px"
             >
               <el-button type="primary">上传图片</el-button>

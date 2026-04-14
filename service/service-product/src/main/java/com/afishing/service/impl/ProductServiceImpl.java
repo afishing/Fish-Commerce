@@ -217,9 +217,14 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
-    public Result<PageResult<Product>> getProductListForAdmin(Integer status, Integer page, Integer size) {
+    public Result<PageResult<Product>> getProductListForAdmin(String keyword, Integer status, Integer page, Integer size) {
         Page<Product> pageParam = new Page<>(page, size);
         LambdaQueryWrapper<Product> wrapper = new LambdaQueryWrapper<>();
+        
+        // 按商品名称模糊搜索
+        if (keyword != null && !keyword.trim().isEmpty()) {
+            wrapper.like(Product::getName, keyword);
+        }
         
         if (status != null) {
             wrapper.eq(Product::getStatus, status);

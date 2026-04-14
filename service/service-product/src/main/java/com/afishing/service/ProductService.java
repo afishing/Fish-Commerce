@@ -35,7 +35,7 @@ public interface ProductService {
     /**
      * 获取商品列表（管理员用）
      */
-    Result<PageResult<Product>> getProductListForAdmin(Integer status, Integer page, Integer size);
+    Result<PageResult<Product>> getProductListForAdmin(String keyword, Integer status, Integer page, Integer size);
 
     /**
      * 更新商品状态（上架/下架）

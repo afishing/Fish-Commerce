@@ -46,7 +46,6 @@ public class OrderServiceImpl implements OrderService {
         if (status != null) {
             wrapper.eq(Order::getStatus, status);
         }
-        
         wrapper.orderByDesc(Order::getCreateTime);
         
         List<Order> orders = orderMapper.selectList(wrapper);

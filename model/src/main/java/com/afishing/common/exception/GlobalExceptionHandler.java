@@ -6,6 +6,8 @@ import org.springframework.validation.BindException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.servlet.NoHandlerFoundException;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 /**
  * 全局异常处理器
@@ -13,6 +15,26 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 @Slf4j
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+
+    /**
+     * 静态资源未找到异常 - 忽略
+     */
+    @ExceptionHandler(NoResourceFoundException.class)
+    public Result<Void> handleNoResourceFoundException(NoResourceFoundException e) {
+        // 忽略 favicon.ico 等静态资源请求异常
+        log.debug("静态资源未找到：{}", e.getResourcePath());
+        return Result.error(404, "资源未找到");
+    }
+
+    /**
+     * Handler未找到异常 - 忽略
+     */
+    @ExceptionHandler(NoHandlerFoundException.class)
+    public Result<Void> handleNoHandlerFoundException(NoHandlerFoundException e) {
+        // 忽略 favicon.ico 等请求异常
+        log.debug("未找到处理器：{} {}", e.getHttpMethod(), e.getRequestURL());
+        return Result.error(404, "接口未找到");
+    }
 
     /**
      * 业务异常

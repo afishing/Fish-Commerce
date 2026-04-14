@@ -117,7 +117,7 @@
                     </div>
                     <span class="date">{{ review.createTime ? new Date(review.createTime).toLocaleDateString() : '' }}</span>
                   </div>
-                  <p class="review-content">{{ review.content }}</p>
+                  <p class="review-content">{{ review.content || '用户未填写评价内容' }}</p>
                 </div>
               </div>
             </div>
@@ -169,14 +169,19 @@ import { addToCart as addToCartApi } from '@/api/cart'
 import { getProductDetail } from '@/api/product'
 import { createOrderWithItems, createPayment, confirmPayment, cancelPayment } from '@/api/order'
 import { getImageUrl } from '@/utils/image'
-import { marked } from 'marked'
 import { getProductReviews, addReview } from '@/api/review'
 
-// 配置marked选项
-marked.setOptions({
-  breaks: true,
-  gfm: true
-})
+// 简单的Markdown解析函数（替代marked库）
+const simpleMarkdown = (text) => {
+  if (!text) return ''
+  return text
+    .replace(/^### (.*$)/gim, '<h3>$1</h3>')
+    .replace(/^## (.*$)/gim, '<h2>$1</h2>')
+    .replace(/^# (.*$)/gim, '<h1>$1</h1>')
+    .replace(/\*\*(.*)\*\*/gim, '<b>$1</b>')
+    .replace(/\*(.*)\*/gim, '<i>$1</i>')
+    .replace(/\n/gim, '<br>')
+}
 
 const router = useRouter()
 const route = useRoute()
@@ -227,7 +232,7 @@ const renderedDetail = computed(() => {
       return `![${alt}](${fullUrl})`
     }
   )
-  return marked.parse(processedDetail)
+  return simpleMarkdown(processedDetail)
 })
 
 // 评论相关
@@ -309,8 +314,13 @@ const fetchReviews = async () => {
   reviewsLoading.value = true
   try {
     const res = await getProductReviews(productId)
-    if (res.code === 200 || res.success) {
-      reviews.value = res.data || []
+    if (res.code === 200 || res.code === 0) {
+      // 给每条评论添加默认评分（后端暂无rating字段）
+      const list = res.data?.records || res.data?.list || res.data || []
+      reviews.value = list.map(r => ({
+        ...r,
+        rating: 5 // 默认5星
+      }))
     }
   } catch (error) {
     console.error('获取评论失败:', error)

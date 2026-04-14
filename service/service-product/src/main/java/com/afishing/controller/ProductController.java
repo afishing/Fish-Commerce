@@ -109,10 +109,11 @@ public class ProductController {
      */
     @GetMapping("/admin/list")
     public Result<PageResult<Product>> getProductListForAdmin(
+            @RequestParam(required = false) String keyword,
             @RequestParam(required = false) Integer status,
             @RequestParam(defaultValue = "1") Integer page,
             @RequestParam(defaultValue = "10") Integer size) {
-        return productService.getProductListForAdmin(status, page, size);
+        return productService.getProductListForAdmin(keyword, status, page, size);
     }
 
     /**

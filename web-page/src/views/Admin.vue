@@ -43,8 +43,9 @@
             <span>商品管理</span>
           </template>
           <el-menu-item index="/admin/products"><el-icon><Goods /></el-icon>商品列表</el-menu-item>
+          <el-menu-item index="/admin/categories"><el-icon><Menu /></el-icon>分类管理</el-menu-item>
           <el-menu-item index="/admin/tags"><el-icon><PriceTag /></el-icon>标签管理</el-menu-item>
-          <el-menu-item index="/admin/coupons"><el-icon><Ticket /></el-icon>优惠券管理</el-menu-item>
+          <el-menu-item index="/admin/stock"><el-icon><Warning /></el-icon>库存管理</el-menu-item>
         </el-sub-menu>
         <el-sub-menu index="/admin/other">
           <template #title>
@@ -54,6 +55,13 @@
           <el-menu-item index="/admin/gallery"><el-icon><Picture /></el-icon>图片管理</el-menu-item>
           <el-menu-item index="/admin/video"><el-icon><VideoPlay /></el-icon>视频管理</el-menu-item>
           <el-menu-item index="/admin/notice"><el-icon><Bell /></el-icon>公告管理</el-menu-item>
+        </el-sub-menu>
+        <el-sub-menu index="/admin/system">
+          <template #title>
+            <el-icon><Setting /></el-icon>
+            <span>系统工具</span>
+          </template>
+          <el-menu-item index="/admin/monitor"><el-icon><Monitor /></el-icon>系统监控</el-menu-item>
         </el-sub-menu>
       </el-menu>
       <div class="sidebar-footer">
@@ -86,7 +94,7 @@
       </el-header>
 
       <!-- 内容区 -->
-      <el-main class="main-content">
+      <el-main :class="['main-content', { 'no-padding': route.path === '/admin/monitor' }]">
         <router-view />
       </el-main>
     </el-container>
@@ -97,7 +105,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { ElMessage } from 'element-plus'
-import { DataLine, User, Document, Goods, ArrowDown, Grid, Monitor, PieChart, Avatar, ChatDotRound, Picture, VideoPlay, Bell, House, SwitchButton, PriceTag, Ticket } from '@element-plus/icons-vue'
+import { DataLine, User, Document, Goods, ArrowDown, Grid, Monitor, PieChart, Avatar, ChatDotRound, Picture, VideoPlay, Bell, House, SwitchButton, PriceTag, Menu, Warning, Setting } from '@element-plus/icons-vue'
 
 const router = useRouter()
 const route = useRoute()
@@ -113,11 +121,13 @@ const pageTitleMap = {
   '/admin/reviews': '评论管理',
   '/admin/orders': '订单管理',
   '/admin/products': '商品管理',
+  '/admin/categories': '分类管理',
   '/admin/gallery': '图片管理',
   '/admin/videos': '视频管理',
   '/admin/notices': '公告管理',
   '/admin/tags': '标签管理',
-  '/admin/coupons': '优惠券管理',
+  '/admin/stock': '库存管理',
+  '/admin/monitor': '系统监控'
 }
 const pageTitle = computed(() => pageTitleMap[route.path] || '后台管理')
 
@@ -305,5 +315,10 @@ const logout = () => {
 .main-content {
   padding: 24px;
   min-height: calc(100vh - 60px);
+}
+
+.main-content.no-padding {
+  padding: 0;
+  overflow: hidden;
 }
 </style>

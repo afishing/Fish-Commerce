@@ -43,7 +43,7 @@ export function deleteGalleryImage(id) {
 export function batchDeleteGalleryImages(ids) {
   return request({
     url: '/api/gallery/delete/batch',
-    method: 'delete',
+    method: 'post',
     data: ids
   })
 }

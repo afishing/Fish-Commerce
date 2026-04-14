@@ -1,6 +1,11 @@
 <template>
   <router-view />
+  <PetWidget />
 </template>
+
+<script setup>
+import PetWidget from '@/components/PetWidget.vue'
+</script>
 
 <style>
 html, body, #app {

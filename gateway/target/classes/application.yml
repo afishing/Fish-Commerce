@@ -84,17 +84,35 @@ spring:
           predicates:
             - Path=/upload/**
 
-        # 视频服务路由
+        # 视频服务路由（在service-content中）
         - id: service-video
-          uri: lb://service-video
+          uri: lb://service-content
           predicates:
-            - Path=/video/**
+            - Path=/api/video/**
+          filters:
+            - StripPrefix=1
 
-        # 公告服务路由（在service-product中）
+        # 图库服务路由（在service-content中）
+        - id: service-gallery
+          uri: lb://service-content
+          predicates:
+            - Path=/api/gallery/**
+          filters:
+            - StripPrefix=1
+
+        # 公告服务路由（在service-content中）
         - id: service-notice
-          uri: lb://service-product
+          uri: lb://service-content
           predicates:
             - Path=/api/notice/**
+          filters:
+            - StripPrefix=1
+
+        # 分类服务路由（在service-product中）
+        - id: service-category
+          uri: lb://service-product
+          predicates:
+            - Path=/api/category/**
           filters:
             - StripPrefix=1
 
@@ -106,6 +124,14 @@ spring:
           filters:
             - StripPrefix=1
 
+        # 监控服务路由
+        - id: service-monitor
+          uri: lb://monitor
+          predicates:
+            - Path=/api/monitor/**
+          filters:
+            - StripPrefix=1
+
         # AI服务路由
         - id: service-ai
           uri: lb://service-ai
@@ -113,6 +139,9 @@ spring:
             - Path=/api/ai/**
           filters:
             - StripPrefix=1
+          metadata:
+            response-timeout: 120000
+            connect-timeout: 10000
 
   # Redis 配置（用于限流）
   data:

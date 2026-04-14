@@ -10,8 +10,11 @@
 
       <!-- 搜索栏 -->
       <el-form :model="queryForm" inline class="search-form">
+        <el-form-item label="商品名称">
+          <el-input v-model="queryForm.keyword" placeholder="请输入商品名称" clearable style="width: 200px" />
+        </el-form-item>
         <el-form-item label="商品状态">
-          <el-select v-model="queryForm.status" placeholder="请选择状态" clearable>
+          <el-select v-model="queryForm.status" placeholder="请选择状态" clearable style="width: 120px">
             <el-option label="上架" :value="1" />
             <el-option label="下架" :value="0" />
           </el-select>
@@ -47,7 +50,13 @@
             ¥{{ row.originalPrice?.toFixed(2) }}
           </template>
         </el-table-column>
-        <el-table-column prop="stock" label="库存" width="80" />
+        <el-table-column prop="stock" label="库存" width="100">
+          <template #default="{ row }">
+            <el-tag :type="getStockTagType(row.stock)">
+              {{ row.stock }}
+            </el-tag>
+          </template>
+        </el-table-column>
         <el-table-column prop="sales" label="销量" width="80" />
         <el-table-column prop="status" label="状态" width="80">
           <template #default="{ row }">
@@ -138,8 +147,15 @@
             placeholder="请输入商品描述"
           />
         </el-form-item>
-        <el-form-item label="分类ID" prop="categoryId">
-          <el-input-number v-model="productForm.categoryId" :min="1" />
+        <el-form-item label="商品分类" prop="categoryId">
+          <el-select v-model="productForm.categoryId" placeholder="请选择分类" style="width: 100%">
+            <el-option
+              v-for="category in categoryList"
+              :key="category.id"
+              :label="category.name"
+              :value="category.id"
+            />
+          </el-select>
         </el-form-item>
         <el-form-item label="价格" prop="price">
           <el-input-number v-model="productForm.price" :min="0" :precision="2" />
@@ -153,9 +169,8 @@
         <el-form-item label="商品主图">
           <el-upload
             class="product-image-uploader"
-            action="http://localhost:5000/upload"
             :show-file-list="false"
-            :on-success="handleImageSuccess"
+            :http-request="uploadProductImage"
             :before-upload="beforeImageUpload"
             accept="image/*"
           >
@@ -303,7 +318,7 @@
               <el-button size="small" @click="insertMarkdown('link')" title="链接">
                 <el-icon><Link /></el-icon>
               </el-button>
-              <el-button size="small" @click="insertMarkdown('image')" title="图片">
+              <el-button size="small" @click="triggerImageUpload" title="上传本地图片">
                 <el-icon><Picture /></el-icon>
               </el-button>
               <el-button size="small" @click="openGalleryDialog" title="从图库选择">
@@ -313,6 +328,14 @@
                 <el-icon><Document /></el-icon>
               </el-button>
             </el-button-group>
+            <!-- 隐藏的文件上传input -->
+            <input
+              ref="detailImageUploadRef"
+              type="file"
+              accept="image/*"
+              style="display: none"
+              @change="handleDetailImageUpload"
+            />
             <el-divider direction="vertical" />
             <el-button-group>
               <el-button size="small" @click="insertMarkdown('quote')" title="引用">
@@ -350,7 +373,7 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed, onMounted } from 'vue'
+import { ref, reactive, computed, onMounted, nextTick } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Plus, List, Operation, Link, Picture, Document, ChatLineSquare, Minus, FolderOpened, Star, StarFilled } from '@element-plus/icons-vue'
 import { getImageUrl } from '../utils/image'
@@ -364,9 +387,22 @@ import {
   updateProductDetail,
   getProductDetail
 } from '../api/admin'
-import { getGalleryList } from '../api/gallery'
+import { getGalleryList, uploadImage as uploadGalleryImage } from '../api/gallery'
 import { setBanner } from '../api/product'
 import { getAllTags, getProductTags, setProductTags } from '../api/tag'
+import { getAllCategories } from '../api/category'
+
+// 分类相关
+const categoryList = ref([])
+
+const loadAllCategories = async () => {
+  try {
+    const res = await getAllCategories()
+    categoryList.value = res.data || []
+  } catch (e) {
+    console.error('加载分类失败')
+  }
+}
 
 // 标签相关
 const allTags = ref([])
@@ -392,6 +428,7 @@ const productFormRef = ref(null)
 const detailDialogVisible = ref(false)
 const detailSaving = ref(false)
 const detailTextareaRef = ref(null)
+const detailImageUploadRef = ref(null)
 const detailForm = reactive({
   id: null,
   detail: ''
@@ -407,10 +444,10 @@ const openGalleryDialog = async () => {
   galleryDialogVisible.value = true
   galleryLoading.value = true
   try {
-    const res = await getGalleryList()
+    const res = await getGalleryList({ page: 1, size: 50 })
     if (res.code === 200 || res.success) {
-      // 图库数据是 GalleryImage 对象数组，直接使用
-      galleryList.value = res.data || []
+      // 分页数据在 records 中
+      galleryList.value = res.data?.records || res.data || []
     } else {
       ElMessage.error(res.message || '获取图库列表失败')
     }
@@ -422,26 +459,81 @@ const openGalleryDialog = async () => {
   }
 }
 
-// 选择图库图片插入到编辑器
-const selectGalleryImage = (imageUrl) => {
-  const textarea = detailTextareaRef.value?.$refs?.textarea
-  if (!textarea) return
+// 触发详情图片上传
+const triggerImageUpload = () => {
+  detailImageUploadRef.value?.click()
+}
+
+// 处理详情图片上传
+const handleDetailImageUpload = async (event) => {
+  const file = event.target.files?.[0]
+  if (!file) return
   
-  const start = textarea.selectionStart
-  const end = textarea.selectionEnd
-  const text = detailForm.detail
+  // 验证文件类型
+  const validTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp']
+  if (!validTypes.includes(file.type)) {
+    ElMessage.error('请上传图片文件（jpg/png/gif/webp）')
+    event.target.value = ''
+    return
+  }
+  
+  // 验证文件大小（最大 5MB）
+  if (file.size > 5 * 1024 * 1024) {
+    ElMessage.error('图片大小不能超过 5MB')
+    event.target.value = ''
+    return
+  }
+  
+  try {
+    ElMessage.info('正在上传图片...')
+    const res = await uploadGalleryImage(file)
+    if (res.code === 200 || res.success) {
+      // 上传成功，插入图片到编辑器
+      const imageUrl = res.data?.url || ''
+      if (imageUrl) {
+        insertImageToDetail(imageUrl)
+        ElMessage.success('图片上传成功')
+      }
+    } else {
+      ElMessage.error(res.message || '上传失败')
+    }
+  } catch (error) {
+    console.error('上传图片失败:', error)
+    ElMessage.error('上传图片失败')
+  } finally {
+    // 清空 input 以便可以重复选择同一文件
+    event.target.value = ''
+  }
+}
+
+// 插入图片到详情编辑器
+const insertImageToDetail = (imageUrl) => {
+  const textarea = detailTextareaRef.value?.$el?.querySelector('textarea')
+  if (!textarea) {
+    ElMessage.error('无法获取编辑器')
+    return
+  }
+  
+  const start = textarea.selectionStart || 0
+  const end = textarea.selectionEnd || 0
+  const text = detailForm.detail || ''
   const imageMarkdown = `![商品图片](${imageUrl})`
   
   const newText = text.substring(0, start) + imageMarkdown + text.substring(end)
   detailForm.detail = newText
   
-  // 关闭对话框并设置光标位置
-  galleryDialogVisible.value = false
-  setTimeout(() => {
+  nextTick(() => {
     const newCursorPos = start + imageMarkdown.length
     textarea.focus()
     textarea.setSelectionRange(newCursorPos, newCursorPos)
-  }, 0)
+  })
+}
+
+// 选择图库图片插入到编辑器
+const selectGalleryImage = (imageUrl) => {
+  insertImageToDetail(imageUrl)
+  galleryDialogVisible.value = false
+  ElMessage.success('图片已插入')
 }
 
 // 插入 Markdown 语法
@@ -578,6 +670,7 @@ const parseMarkdown = (text) => {
 }
 
 const queryForm = reactive({
+  keyword: '',
   status: null,
   page: 1,
   size: 10
@@ -601,7 +694,7 @@ const productForm = reactive({
 
 const productRules = {
   name: [{ required: true, message: '请输入商品名称', trigger: 'blur' }],
-  categoryId: [{ required: true, message: '请输入分类ID', trigger: 'blur' }],
+  categoryId: [{ required: true, message: '请选择商品分类', trigger: 'change' }],
   price: [{ required: true, message: '请输入价格', trigger: 'blur' }],
   stock: [{ required: true, message: '请输入库存', trigger: 'blur' }]
 }
@@ -610,7 +703,7 @@ const fetchProductList = async () => {
   loading.value = true
   try {
     const res = await getProductList(queryForm)
-    if (res.success) {
+    if (res.code === 200 || res.code === 0) {
       productList.value = res.data.list
       total.value = res.data.total
     } else {
@@ -629,6 +722,7 @@ const handleSearch = () => {
 }
 
 const handleReset = () => {
+  queryForm.keyword = ''
   queryForm.status = null
   queryForm.page = 1
   fetchProductList()
@@ -799,13 +893,27 @@ const formatDate = (dateStr) => {
   return date.toLocaleString()
 }
 
+// 获取库存标签类型
+const getStockTagType = (stock) => {
+  if (stock === 0) return 'danger'
+  if (stock <= 10) return 'warning'
+  return 'success'
+}
+
 // 图片上传相关
-const handleImageSuccess = (response) => {
-  if (response.success) {
-    productForm.mainImage = response.data
-    ElMessage.success('图片上传成功')
-  } else {
-    ElMessage.error(response.message || '图片上传失败')
+const uploadProductImage = async (options) => {
+  const { file } = options
+  
+  try {
+    const res = await uploadGalleryImage(file)
+    if (res.code === 200 || res.code === 0) {
+      productForm.mainImage = res.data.url || res.data
+      ElMessage.success('图片上传成功')
+    } else {
+      ElMessage.error(res.message || '图片上传失败')
+    }
+  } catch (error) {
+    ElMessage.error('图片上传失败')
   }
 }
 
@@ -828,6 +936,7 @@ const beforeImageUpload = (rawFile) => {
 onMounted(() => {
   fetchProductList()
   loadAllTags()
+  loadAllCategories()
 })
 
 // 打开详情编辑对话框

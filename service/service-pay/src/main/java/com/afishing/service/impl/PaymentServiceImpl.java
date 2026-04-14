@@ -89,8 +89,8 @@ public class PaymentServiceImpl implements PaymentService {
         payment.setTransactionNo(transactionNo);
         paymentMapper.updateById(payment);
 
-        // 通过Feign更新订单状态
-        orderFeignClient.updatePayStatus(orderId, 2, payment.getPayType());
+        // 通过Feign更新订单状态为待发货（状态1）
+        orderFeignClient.updatePayStatus(orderId, 1, payment.getPayType());
 
         // 更新商品销量和库存
         try {

@@ -38,15 +38,30 @@ public class AuthFilter implements GlobalFilter, Ordered {
      * 白名单路径（不需要登录即可访问）
      */
     private static final List<String> WHITE_LIST = Arrays.asList(
+            // 用户相关
             "/user/login",
             "/user/register",
             "/user/check-username",
             "/user/check-email",
+            // 商品相关
             "/product/list",
             "/product/detail",
             "/product/category",
+            "/product/banner",
+            // 公告相关
+            "/notice/active",
+            "/notice/enabled",
+            // 分类相关
+            "/category/list",
+            // 标签相关
+            "/tag/list",
+            // 静态资源
             "/uploads/",
-            "/pay/callback"
+            // 支付回调
+            "/pay/callback",
+            // AI 助手（无需登录即可使用）
+            "/ai/chat",
+            "/ai/stream"
     );
 
     @Override

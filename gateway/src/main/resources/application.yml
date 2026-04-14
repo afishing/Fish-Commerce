@@ -108,11 +108,27 @@ spring:
           filters:
             - StripPrefix=1
 
+        # 分类服务路由（在service-product中）
+        - id: service-category
+          uri: lb://service-product
+          predicates:
+            - Path=/api/category/**
+          filters:
+            - StripPrefix=1
+
         # 标签服务路由（在service-product中）
         - id: service-tag
           uri: lb://service-product
           predicates:
             - Path=/api/tag/**
+          filters:
+            - StripPrefix=1
+
+        # 监控服务路由
+        - id: service-monitor
+          uri: lb://monitor
+          predicates:
+            - Path=/api/monitor/**
           filters:
             - StripPrefix=1
 
@@ -123,6 +139,9 @@ spring:
             - Path=/api/ai/**
           filters:
             - StripPrefix=1
+          metadata:
+            response-timeout: 120000
+            connect-timeout: 10000
 
   # Redis 配置（用于限流）
   data:

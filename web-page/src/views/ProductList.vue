@@ -29,7 +29,7 @@
         <el-card class="toolbar">
           <el-row justify="space-between" align="middle">
             <el-col :span="12">
-              <el-input v-model="searchKeyword" placeholder="搜索商品..." class="search-input" @keyup.enter="handleSearch" size="large">
+              <el-input v-model="searchKeyword" placeholder="搜索商品名称或描述..." class="search-input" clearable @keyup.enter="handleSearch" @clear="handleClearSearch" size="large">
                 <template #prefix>
                   <el-icon><Search /></el-icon>
                 </template>
@@ -37,6 +37,9 @@
                   <el-button @click="handleSearch" type="primary">搜索</el-button>
                 </template>
               </el-input>
+              <el-tag v-if="searchKeyword" type="info" closable @close="handleClearSearch" style="margin-left: 8px">
+                关键词: {{ searchKeyword }}
+              </el-tag>
             </el-col>
             <el-col :span="12" style="text-align: right">
               <el-select v-model="sortBy" placeholder="请选择" style="width: 150px" @change="fetchProducts">
@@ -136,7 +139,7 @@
 
 <script setup>
 import { ref, reactive, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRouter, useRoute } from 'vue-router'
 import { Search, Grid, Sort, List, Top, Bottom, TrendCharts, Trophy, User, ShoppingCart, PriceTag, Close, Check } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
 import AppHeader from '@/components/AppHeader.vue'
@@ -144,17 +147,12 @@ import { getProductList } from '@/api/product'
 import { addToCart as addToCartApi } from '@/api/cart'
 import { getImageUrl } from '@/utils/image'
 import { getAllTags } from '@/api/tag'
+import { getCategoryList } from '@/api/category'
 
 const router = useRouter()
+const route = useRoute()
 
-const categories = reactive([
-  { id: 0, name: '全部', icon: '📋' },
-  { id: 1, name: '海鲜鱼类', icon: '🐟' },
-  { id: 2, name: '虾蟹贝类', icon: '🦐' },
-  { id: 3, name: '冷冻食品', icon: '🧊' },
-  { id: 4, name: '水产干货', icon: '🦑' },
-  { id: 5, name: '特色美食', icon: '🍣' }
-])
+const categories = reactive([{ id: 0, name: '全部', icon: '📋' }])
 
 const selectedCategory = ref(0)
 const searchKeyword = ref('')
@@ -235,6 +233,16 @@ const handleCategoryChange = (categoryId) => {
 // 搜索
 const handleSearch = () => {
   currentPage.value = 1
+  // 搜索时清除分类和标签筛选，避免结果混乱
+  selectedCategory.value = 0
+  selectedTagIds.value = []
+  fetchProducts()
+}
+
+// 清空搜索
+const handleClearSearch = () => {
+  searchKeyword.value = ''
+  currentPage.value = 1
   fetchProducts()
 }
 
@@ -270,8 +278,31 @@ const addToCart = async (product) => {
   }
 }
 
+// 加载分类列表
+const loadCategories = async () => {
+  try {
+    const res = await getCategoryList()
+    if (res.data && res.data.length > 0) {
+      res.data.forEach(cat => {
+        categories.push(cat)
+      })
+    }
+  } catch (error) {
+    console.error('加载分类失败:', error)
+  }
+}
+
 // 初始化
 onMounted(async () => {
+  // 加载分类
+  await loadCategories()
+  
+  // 从URL参数读取分类ID
+  const categoryId = route.query.categoryId
+  if (categoryId) {
+    selectedCategory.value = parseInt(categoryId)
+  }
+  
   fetchProducts()
   try {
     const res = await getAllTags()
