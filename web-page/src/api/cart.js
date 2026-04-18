@@ -3,7 +3,7 @@ import { ElMessage } from 'element-plus'
 
 // 购物车服务请求实例 - 通过Gateway网关访问
 const cartRequest = axios.create({
-  baseURL: 'http://localhost:5000/api/cart',
+  baseURL: (import.meta.env.VITE_API_BASE_URL || '') + '/api/cart',
   timeout: 10000
 })
 

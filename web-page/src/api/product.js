@@ -3,7 +3,7 @@ import { ElMessage } from 'element-plus'
 
 // 商品服务请求实例 - 通过Gateway网关访问
 const productRequest = axios.create({
-  baseURL: 'http://localhost:5000/api/product',
+  baseURL: (import.meta.env.VITE_API_BASE_URL || '') + '/api/product',
   timeout: 10000
 })
 

@@ -1,0 +1,52 @@
+server:
+  port: 9000
+
+spring:
+  application:
+    name: service-product
+  cloud:
+    nacos:
+      discovery:
+        server-addr: nacos:8848
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://mysql:3306/fish_product?useUnicode=true&characterEncoding=utf-8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
+    username: root
+    password: ${MYSQL_PASSWORD:wsp0222.}
+  data:
+    redis:
+      host: redis
+      port: 6379
+  web:
+    resources:
+      static-locations: classpath:/static/,file:/app/uploads/
+  mvc:
+    static-path-pattern: /uploads/**
+
+mybatis-plus:
+  mapper-locations: classpath:mapper/**/*.xml
+  type-aliases-package: com.afishing.entity
+  configuration:
+    map-underscore-to-camel-case: true
+
+file:
+  upload:
+    path: /app/uploads/
+  access:
+    url: /uploads/
+
+spring.boot.admin.client.url: http://monitor:8080
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+  endpoint:
+    health:
+      show-details: always
+    info:
+      enabled: true
+  info:
+    env:
+      enabled: true

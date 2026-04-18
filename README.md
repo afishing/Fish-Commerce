@@ -1,6 +1,8 @@
 # Fish-Commerce 🐟
 
-基于 **Spring Cloud Alibaba** 的水产品垂直电商平台，采用前后端分离的微服务架构。
+基于 **Spring Cloud Alibaba** 的水产品垂直电商平台，采用前后端分离的微服务架构，支持 **Docker 一键部署**。
+
+> 🌐 技术栈：Spring Boot 3 + Spring Cloud 2023 + Vue 3 + Nacos + MySQL + Redis + RabbitMQ + Nginx
 
 ## 系统功能架构图
 
@@ -92,9 +94,43 @@ Fish-Commerce/
 │   ├── service-content/ # 内容服务（端口 9200）
 │   └── service-ai/      # AI 智能服务（端口 9100，DeepSeek）
 ├── web-page/            # 前端项目（Vue 3）
+├── docker/              # Docker 配置（Dockerfile、Nginx）
 ├── sql/                 # 数据库脚本
 ├── uploads/             # 文件上传目录
+├── docker-compose.yml   # Docker Compose 编排文件
+├── build.ps1            # 一键构建部署脚本
 └── pom.xml              # 父 POM
+```
+
+## 系统架构
+
+```mermaid
+graph TB
+    Client[浏览器] --> Nginx[Nginx 反向代理]
+    Nginx --> |静态资源| Static[Vue 3 前端]
+    Nginx --> |/api/| Gateway[Spring Cloud Gateway]
+    Nginx --> |/uploads/| Gateway
+    
+    Gateway --> Nacos[Nacos 注册中心]
+    Gateway --> UserService[用户服务]
+    Gateway --> ProductService[商品服务]
+    Gateway --> OrderService[订单服务]
+    Gateway --> CartService[购物车服务]
+    Gateway --> PayService[支付服务]
+    Gateway --> ContentService[内容服务]
+    Gateway --> AIService[AI 服务]
+    
+    UserService --> MySQL[(MySQL)]
+    ProductService --> MySQL
+    ProductService --> Redis[(Redis)]
+    OrderService --> MySQL
+    OrderService --> RabbitMQ[RabbitMQ]
+    CartService --> MySQL
+    PayService --> MySQL
+    ContentService --> MySQL
+    AIService --> DeepSeek[DeepSeek API]
+    
+    Monitor[Spring Boot Admin] --> Nacos
 ```
 
 ## 功能模块
@@ -181,29 +217,91 @@ Fish-Commerce/
 ## 环境要求
 
 - **JDK** 17+
-- **Maven** 3.6+
+- **Maven** 3.6+（或使用内置的 Maven Wrapper）
 - **Node.js** 20.19.0 或 22.12.0+
 - **MySQL** 8.0+（字符集 utf8mb4）
 - **Redis** 6.0+
 - **RabbitMQ** 3.x
 - **Nacos** 2.4.3
+- **Docker**（可选，用于一键部署）
 
 ## 快速启动
 
-### 1. 初始化数据库
+### 方式一：Docker 一键部署（推荐）
+
+仅需 Docker 环境，无需安装 JDK、MySQL 等依赖：
+
+```bash
+# 1. 克隆项目
+git clone https://gitee.com/afishing/Fish-commerce.git
+cd Fish-Commerce
+
+# 2. 配置环境变量
+cp .env.example .env
+# 编辑 .env 设置 MySQL 密码和 DeepSeek API Key
+
+# 3. 构建并启动（PowerShell）
+.\build.ps1 build
+
+# 或手动执行：
+.\mvnw.cmd clean package -DskipTests     # 构建 Java 服务
+docker-compose build                       # 构建 Docker 镜像
+docker-compose up -d                       # 启动所有容器
+```
+
+启动完成后访问：
+
+| 服务 | 地址 |
+|------|------|
+| 前端页面 | http://localhost:8888 |
+| API 网关 | http://localhost:5000 |
+| Nacos 控制台 | http://localhost:18848/nacos |
+| RabbitMQ 管理台 | http://localhost:15672 |
+
+**Docker 容器清单（共 14 个）：**
+
+| 容器 | 镜像 | 说明 |
+|------|------|------|
+| fish-mysql | mysql:8.0 | 数据库（自动初始化 8 个库） |
+| fish-redis | redis:6-alpine | 缓存 |
+| fish-rabbitmq | rabbitmq:3-management | 消息队列 |
+| fish-nacos | nacos-server:v2.4.3-slim | 注册中心 |
+| fish-gateway | 自构建 | API 网关 |
+| fish-service-user | 自构建 | 用户服务 |
+| fish-service-product | 自构建 | 商品服务 |
+| fish-service-order | 自构建 | 订单服务 |
+| fish-service-cart | 自构建 | 购物车服务 |
+| fish-service-pay | 自构建 | 支付服务 |
+| fish-service-content | 自构建 | 内容服务 |
+| fish-service-ai | 自构建 | AI 智能服务 |
+| fish-monitor | 自构建 | 系统监控 |
+| fish-nginx | nginx:alpine | 前端 + 反向代理 |
+
+```bash
+# 常用运维命令
+docker-compose logs -f gateway       # 查看网关日志
+docker-compose restart service-product  # 重启单个服务
+docker-compose down                  # 停止所有容器
+.\build.ps1 logs                     # 查看所有日志
+.\build.ps1 clean                    # 清理容器和镜像
+```
+
+### 方式二：本地开发启动
+
+#### 1. 初始化数据库
 
 ```bash
 mysql -u root -p < sql/init.sql
 ```
 
-### 2. 启动基础设施
+#### 2. 启动基础设施
 
 按以下顺序启动中间件：
 
 1. **Nacos**（http://127.0.0.1:8848）
 2. **MySQL**、**Redis**、**RabbitMQ**
 
-### 3. 启动后端服务
+#### 3. 启动后端服务
 
 按以下推荐顺序依次启动微服务：
 
@@ -212,7 +310,7 @@ service-user → service-product → service-order → service-cart
 → service-pay → service-content → service-ai → monitor → gateway
 ```
 
-### 4. 启动前端
+#### 4. 启动前端
 
 ```bash
 cd web-page
@@ -276,3 +374,8 @@ npm run dev
 - 遵循阿里巴巴 Java 开发手册
 - RESTful API 设计
 - 数据库表名使用单数命名（如 `order` 而非 `orders`）
+- 前端使用 Vue 3 组合式 API + Element Plus
+
+## License
+
+MIT

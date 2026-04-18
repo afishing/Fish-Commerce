@@ -15,7 +15,7 @@
           <div class="avatar">
             <el-upload
               class="avatar-uploader"
-              action="http://localhost:5000/upload"
+              :action="uploadAction"
               :headers="uploadHeaders"
               :show-file-list="false"
               :on-success="handleAvatarSuccess"
@@ -707,6 +707,9 @@ const avatarUploading = ref(false)
 const uploadHeaders = computed(() => ({
   Authorization: `Bearer ${localStorage.getItem('token') || ''}`
 }))
+
+// 上传地址
+const uploadAction = computed(() => (import.meta.env.VITE_API_BASE_URL || '') + '/upload')
 
 // 头像上传成功
 const handleAvatarSuccess = async (response) => {

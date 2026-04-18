@@ -2,7 +2,7 @@
  * 图片URL处理工具
  */
 
-const GATEWAY = 'http://localhost:5000'
+const GATEWAY = import.meta.env.VITE_API_BASE_URL || ''
 
 /**
  * 获取图片完整URL

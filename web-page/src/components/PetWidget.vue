@@ -146,17 +146,27 @@ const frames = {
   falling: []
 }
 
-// 预加载图片
-for (let i = 1; i <= 12; i++) {
-  frames.walkLeft.push(`/pet/walkleft${i}.png`)
-  frames.walkRight.push(`/pet/walkright${i}.png`)
-  frames.drag.push(`/pet/drag${i}.png`)
-  frames.fish.push(`/pet/fish${i}.png`)
-  frames.kiss.push(`/pet/kiss${i}.png`)
-  frames.sleep.push(`/pet/sleep${i}.png`)
-  frames.stand.push(`/pet/stand${i}.png`)
+// 预加载图片到浏览器缓存，避免动画切换时重复请求
+const imageCache = new Map()
+function preloadImage(src) {
+  if (!imageCache.has(src)) {
+    const img = new Image()
+    img.src = src
+    imageCache.set(src, img)
+  }
+  return src
 }
-frames.falling.push('/pet/falling1.png')
+
+for (let i = 1; i <= 12; i++) {
+  frames.walkLeft.push(preloadImage(`/pet/walkleft${i}.png`))
+  frames.walkRight.push(preloadImage(`/pet/walkright${i}.png`))
+  frames.drag.push(preloadImage(`/pet/drag${i}.png`))
+  frames.fish.push(preloadImage(`/pet/fish${i}.png`))
+  frames.kiss.push(preloadImage(`/pet/kiss${i}.png`))
+  frames.sleep.push(preloadImage(`/pet/sleep${i}.png`))
+  frames.stand.push(preloadImage(`/pet/stand${i}.png`))
+}
+frames.falling.push(preloadImage('/pet/falling1.png'))
 
 // 动作权重
 const actions = {

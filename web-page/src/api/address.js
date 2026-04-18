@@ -3,7 +3,7 @@ import { ElMessage } from 'element-plus'
 
 // 地址服务请求实例 - 通过Gateway网关访问
 const addressRequest = axios.create({
-  baseURL: 'http://localhost:5000/api/address',
+  baseURL: (import.meta.env.VITE_API_BASE_URL || '') + '/api/address',
   timeout: 10000
 })
 

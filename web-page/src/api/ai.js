@@ -1,6 +1,6 @@
 import request from './request'
 
-const GATEWAY_BASE = 'http://localhost:5000'
+const GATEWAY_BASE = import.meta.env.VITE_API_BASE_URL || ''
 
 /**
  * 普通对话（非流式）

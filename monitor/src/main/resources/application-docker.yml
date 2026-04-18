@@ -1,0 +1,22 @@
+spring:
+  application:
+    name: monitor
+  cloud:
+    nacos:
+      server-addr: nacos:8848
+
+server:
+  port: 8080
+
+spring.boot.admin.ui.public-url: /
+spring.boot.admin.ui.brand: "<img src='assets/img/icon-spring-boot-admin.svg'><span>飞鱼商城监控</span>"
+spring.boot.admin.ui.title: "飞鱼商城监控系统"
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+  endpoint:
+    health:
+      show-details: always

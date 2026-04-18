@@ -3,7 +3,7 @@ import { ElMessage } from 'element-plus'
 
 // 订单服务请求实例 - 通过Gateway网关访问
 const orderRequest = axios.create({
-  baseURL: 'http://localhost:5000/api/order',
+  baseURL: (import.meta.env.VITE_API_BASE_URL || '') + '/api/order',
   timeout: 10000
 })
 
@@ -107,7 +107,7 @@ export function deleteOrder(id) {
 
 // 支付服务请求实例 - 通过Gateway网关访问
 const payRequest = axios.create({
-  baseURL: 'http://localhost:5000/api/payment',
+  baseURL: (import.meta.env.VITE_API_BASE_URL || '') + '/api/payment',
   timeout: 10000
 })
 

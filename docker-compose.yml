@@ -1,0 +1,267 @@
+services:
+  # ==================== 基础设施层 ====================
+  mysql:
+    image: mysql:8.0
+    container_name: fish-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_PASSWORD:-wsp0222.}
+      TZ: Asia/Shanghai
+    ports:
+      - "13306:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+      - ./sql/init.sql:/docker-entrypoint-initdb.d/01-init.sql
+      - ./sql/update_product_descriptions.sql:/docker-entrypoint-initdb.d/02-update-desc.sql
+    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_PASSWORD:-wsp0222.}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+    networks:
+      - fish-net
+
+  redis:
+    image: redis:6-alpine
+    container_name: fish-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    networks:
+      - fish-net
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: fish-rabbitmq
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "check_running"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+    networks:
+      - fish-net
+
+  nacos:
+    image: nacos/nacos-server:v2.4.3-slim
+    container_name: fish-nacos
+    environment:
+      MODE: standalone
+      JVM_XMS: 256m
+      JVM_XMX: 512m
+    ports:
+      - "18848:8848"
+      - "19848:9848"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8848/nacos/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 15
+      start_period: 40s
+    networks:
+      - fish-net
+
+  # ==================== 微服务层 ====================
+  service-user:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.service
+      args:
+        JAR_FILE: service/service-user/target/service-user-0.0.1-SNAPSHOT.jar
+    container_name: fish-service-user
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-wsp0222.}
+    depends_on:
+      mysql:
+        condition: service_healthy
+      nacos:
+        condition: service_healthy
+    networks:
+      - fish-net
+
+  service-product:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.service
+      args:
+        JAR_FILE: service/service-product/target/service-product-0.0.1-SNAPSHOT.jar
+    container_name: fish-service-product
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-wsp0222.}
+    volumes:
+      - ./uploads:/app/uploads
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      nacos:
+        condition: service_healthy
+    networks:
+      - fish-net
+
+  service-order:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.service
+      args:
+        JAR_FILE: service/service-order/target/service-order-0.0.1-SNAPSHOT.jar
+    container_name: fish-service-order
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-wsp0222.}
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      nacos:
+        condition: service_healthy
+    networks:
+      - fish-net
+
+  service-cart:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.service
+      args:
+        JAR_FILE: service/service-cart/target/service-cart-0.0.1-SNAPSHOT.jar
+    container_name: fish-service-cart
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-wsp0222.}
+    depends_on:
+      mysql:
+        condition: service_healthy
+      nacos:
+        condition: service_healthy
+    networks:
+      - fish-net
+
+  service-pay:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.service
+      args:
+        JAR_FILE: service/service-pay/target/service-pay-0.0.1-SNAPSHOT.jar
+    container_name: fish-service-pay
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-wsp0222.}
+    depends_on:
+      mysql:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      nacos:
+        condition: service_healthy
+    networks:
+      - fish-net
+
+  service-content:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.service
+      args:
+        JAR_FILE: service/service-content/target/service-content-0.0.1-SNAPSHOT.jar
+    container_name: fish-service-content
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-wsp0222.}
+    volumes:
+      - ./uploads:/app/uploads
+    depends_on:
+      mysql:
+        condition: service_healthy
+      nacos:
+        condition: service_healthy
+    networks:
+      - fish-net
+
+  service-ai:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.service
+      args:
+        JAR_FILE: service/service-ai/target/service-ai-0.0.1-SNAPSHOT.jar
+    container_name: fish-service-ai
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      DEEPSEEK_API_KEY: ${DEEPSEEK_API_KEY:-sk-07b8fc3197ec4bb8a39371797e98a551}
+    depends_on:
+      nacos:
+        condition: service_healthy
+    networks:
+      - fish-net
+
+  monitor:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.service
+      args:
+        JAR_FILE: monitor/target/monitor-0.0.1-SNAPSHOT.jar
+    container_name: fish-monitor
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+    depends_on:
+      nacos:
+        condition: service_healthy
+    networks:
+      - fish-net
+
+  gateway:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.service
+      args:
+        JAR_FILE: gateway/target/gateway-0.0.1-SNAPSHOT.jar
+    container_name: fish-gateway
+    ports:
+      - "5000:5000"
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+    depends_on:
+      nacos:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - fish-net
+
+  # ==================== 前端层 ====================
+  nginx:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.frontend
+    container_name: fish-nginx
+    ports:
+      - "8888:80"
+    depends_on:
+      - gateway
+    networks:
+      - fish-net
+
+networks:
+  fish-net:
+    driver: bridge
+
+volumes:
+  mysql-data:
+  redis-data:

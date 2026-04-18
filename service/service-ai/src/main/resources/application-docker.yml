@@ -1,0 +1,33 @@
+server:
+  port: 9100
+
+spring:
+  application:
+    name: service-ai
+  cloud:
+    nacos:
+      discovery:
+        server-addr: nacos:8848
+  ai:
+    openai:
+      api-key: ${DEEPSEEK_API_KEY:sk-07b8fc3197ec4bb8a39371797e98a551}
+      base-url: https://api.deepseek.com
+      chat:
+        options:
+          model: deepseek-chat
+
+spring.boot.admin.client.url: http://monitor:8080
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+  endpoint:
+    health:
+      show-details: always
+    info:
+      enabled: true
+  info:
+    env:
+      enabled: true

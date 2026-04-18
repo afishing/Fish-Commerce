@@ -1,0 +1,10 @@
+# 排除不需要的文件（但保留 target 目录中的 JAR）
+.git
+.idea
+*.iml
+node_modules
+web-page/node_modules
+uploads
+mysql-data
+redis-data
+论文初稿.md
