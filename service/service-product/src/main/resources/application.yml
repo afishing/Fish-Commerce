@@ -13,6 +13,10 @@ spring:
     url: jdbc:mysql://localhost:3306/fish_product?useUnicode=true&characterEncoding=utf-8&useSSL=false&serverTimezone=Asia/Shanghai
     username: root
     password: wsp0222.
+  data:
+    redis:
+      host: localhost
+      port: 6379
   web:
     resources:
       static-locations: classpath:/static/,file:E:/Desktop/Code/afishing/Fish-Commerce/uploads/

@@ -178,6 +178,7 @@ import {
 import AppHeader from '@/components/AppHeader.vue'
 import { getCartList, deleteCart, batchDeleteCart, updateCart } from '@/api/cart'
 import { createOrderWithItems, createPayment, confirmPayment, cancelPayment } from '@/api/order'
+import { getRandomProducts } from '@/api/product'
 import { getImageUrl } from '@/utils/image'
 
 const router = useRouter()
@@ -188,12 +189,22 @@ const userId = ref(null)
 
 const cartItems = reactive([])
 
-const recommendItems = reactive([
-  { id: 1, name: '墨鱼仔', price: 38.00, image: 'https://picsum.photos/150/100?random=43' },
-  { id: 2, name: '鲍鱼', price: 158.00, image: 'https://picsum.photos/150/100?random=44' },
-  { id: 3, name: '龙虾', price: 398.00, image: 'https://picsum.photos/150/100?random=45' },
-  { id: 4, name: '扇贝', price: 58.00, image: 'https://picsum.photos/150/100?random=46' }
-])
+const recommendItems = ref([])
+
+// 加载猜你喜欢（随机商品）
+const fetchRecommendItems = async () => {
+  try {
+    const res = await getRandomProducts(4)
+    recommendItems.value = res.data.map(item => ({
+      id: item.id,
+      name: item.name,
+      price: item.price,
+      image: getImageUrl(item.mainImage)
+    }))
+  } catch (error) {
+    console.error('获取推荐商品失败:', error)
+  }
+}
 
 const selectedItems = ref([])
 const selectAll = ref(false)
@@ -231,6 +242,9 @@ const fetchCartList = async () => {
 
 // 检查登录状态并加载购物车
 onMounted(() => {
+  // 无论是否登录都加载推荐商品
+  fetchRecommendItems()
+
   const storedUserInfo = localStorage.getItem('userInfo')
   if (storedUserInfo) {
     isLoggedIn.value = true

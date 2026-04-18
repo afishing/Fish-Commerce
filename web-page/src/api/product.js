@@ -65,6 +65,14 @@ export function getHotProducts(limit = 8) {
   })
 }
 
+export function getRandomProducts(limit = 4) {
+  return productRequest({
+    url: '/random',
+    method: 'get',
+    params: { limit }
+  })
+}
+
 // 获取轮播图商品列表
 export function getBannerProducts() {
   return productRequest({

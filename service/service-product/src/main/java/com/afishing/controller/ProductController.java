@@ -62,6 +62,14 @@ public class ProductController {
     }
 
     /**
+     * 随机获取商品（猜你喜欢）
+     */
+    @GetMapping("/random")
+    public Result<List<Product>> getRandomProducts(@RequestParam(defaultValue = "4") Integer limit) {
+        return productService.getRandomProducts(limit);
+    }
+
+    /**
      * 添加商品
      */
     @PostMapping("/add")

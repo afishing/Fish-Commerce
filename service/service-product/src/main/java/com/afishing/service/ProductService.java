@@ -61,4 +61,9 @@ public interface ProductService {
      * 获取轮播图商品列表
      */
     Result<List<Product>> getBannerProducts();
+
+    /**
+     * 随机获取商品（猜你喜欢）
+     */
+    Result<List<Product>> getRandomProducts(Integer limit);
 }

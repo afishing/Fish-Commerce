@@ -9,16 +9,24 @@ import com.afishing.entity.ProductTag;
 import com.afishing.mapper.ProductTagMapper;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 /**
  * 商品服务实现
  */
+@Slf4j
 @Service
 public class ProductServiceImpl implements ProductService {
 
@@ -27,6 +35,19 @@ public class ProductServiceImpl implements ProductService {
 
     @Autowired
     private ProductTagMapper productTagMapper;
+
+    @Autowired
+    private RedisTemplate<String, Object> redisTemplate;
+
+    private static final String HOT_PRODUCTS_KEY = "product:hot:";
+    private static final long HOT_PRODUCTS_TTL = 30; // 缓存30分钟
+
+    private final ObjectMapper objectMapper;
+
+    public ProductServiceImpl() {
+        this.objectMapper = new ObjectMapper();
+        this.objectMapper.registerModule(new JavaTimeModule());
+    }
 
     @Override
     public Result<PageResult<Product>> getProductList(Long categoryId, String keyword, Integer page, Integer size) {
@@ -156,11 +177,45 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     public Result<List<Product>> getHotProducts(Integer limit) {
+        String cacheKey = HOT_PRODUCTS_KEY + limit;
+
+        // 1. 先从 Redis 缓存中获取
+        try {
+            Object cached = redisTemplate.opsForValue().get(cacheKey);
+            if (cached != null) {
+                List<Product> products = objectMapper.convertValue(cached, new TypeReference<List<Product>>() {});
+                log.info("从 Redis 缓存获取热门商品，数量: {}", products.size());
+                return Result.success(products);
+            }
+        } catch (Exception e) {
+            log.warn("读取 Redis 缓存失败，回退到数据库查询: {}", e.getMessage());
+        }
+
+        // 2. 缓存未命中，查询数据库
         LambdaQueryWrapper<Product> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(Product::getStatus, 1)
                 .orderByDesc(Product::getSales)
                 .last("LIMIT " + limit);
-        
+
+        List<Product> products = productMapper.selectList(wrapper);
+
+        // 3. 写入 Redis 缓存，设置过期时间
+        try {
+            redisTemplate.opsForValue().set(cacheKey, products, HOT_PRODUCTS_TTL, TimeUnit.MINUTES);
+            log.info("热门商品已缓存到 Redis，数量: {}，过期时间: {}分钟", products.size(), HOT_PRODUCTS_TTL);
+        } catch (Exception e) {
+            log.warn("写入 Redis 缓存失败: {}", e.getMessage());
+        }
+
+        return Result.success(products);
+    }
+
+    @Override
+    public Result<List<Product>> getRandomProducts(Integer limit) {
+        LambdaQueryWrapper<Product> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(Product::getStatus, 1)
+                .last("ORDER BY RAND() LIMIT " + limit);
+
         List<Product> products = productMapper.selectList(wrapper);
         return Result.success(products);
     }
@@ -170,6 +225,7 @@ public class ProductServiceImpl implements ProductService {
         product.setStatus(1);
         product.setSales(0);
         productMapper.insert(product);
+        clearHotProductsCache();
         return Result.success("添加成功", null);
     }
 
@@ -181,12 +237,14 @@ public class ProductServiceImpl implements ProductService {
         }
         
         productMapper.updateById(product);
+        clearHotProductsCache();
         return Result.success("更新成功", null);
     }
 
     @Override
     public Result<Void> deleteProduct(Long id) {
         productMapper.deleteById(id);
+        clearHotProductsCache();
         return Result.success("删除成功", null);
     }
 
@@ -213,6 +271,7 @@ public class ProductServiceImpl implements ProductService {
         product.setSales(product.getSales() + quantity);
         product.setStock(product.getStock() - quantity);
         productMapper.updateById(product);
+        clearHotProductsCache();
         return Result.success("销量和库存更新成功", null);
     }
 
@@ -253,6 +312,7 @@ public class ProductServiceImpl implements ProductService {
         
         product.setStatus(status);
         productMapper.updateById(product);
+        clearHotProductsCache();
         
         String action = status == 1 ? "上架" : "下架";
         return Result.success(action + "成功", null);
@@ -298,5 +358,20 @@ public class ProductServiceImpl implements ProductService {
                .orderByAsc(Product::getBannerSort);
         List<Product> products = productMapper.selectList(wrapper);
         return Result.success(products);
+    }
+
+    /**
+     * 清除热门商品缓存
+     */
+    private void clearHotProductsCache() {
+        try {
+            Set<String> keys = redisTemplate.keys(HOT_PRODUCTS_KEY + "*");
+            if (keys != null && !keys.isEmpty()) {
+                redisTemplate.delete(keys);
+                log.info("已清除热门商品缓存，共 {} 个key", keys.size());
+            }
+        } catch (Exception e) {
+            log.warn("清除热门商品缓存失败: {}", e.getMessage());
+        }
     }
 }
