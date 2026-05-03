@@ -22,7 +22,7 @@ public class UserController {
      * 用户登录
      */
     @PostMapping("/login")
-    public Result<User> login(@Valid @RequestBody LoginDTO loginDTO) {
+    public Result<LoginVO> login(@Valid @RequestBody LoginDTO loginDTO) {
         return userService.login(loginDTO);
     }
 

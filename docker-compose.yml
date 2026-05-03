@@ -252,7 +252,7 @@ services:
       dockerfile: docker/Dockerfile.frontend
     container_name: fish-nginx
     ports:
-      - "8888:80"
+      - "8080:80"
     depends_on:
       - gateway
     networks:

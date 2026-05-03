@@ -12,7 +12,7 @@ public interface UserService {
     /**
      * 用户登录
      */
-    Result<User> login(LoginDTO loginDTO);
+    Result<LoginVO> login(LoginDTO loginDTO);
 
     /**
      * 用户注册

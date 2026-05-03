@@ -20,32 +20,32 @@ public class SentinelRuleConfig {
     public void initRules() {
         List<FlowRule> rules = new ArrayList<>();
 
-        // 订单服务限流：每秒最多 100 个请求
+        // 订单服务限流：每秒最多 200 个请求（防止超卖，不宜过高）
         FlowRule orderRule = new FlowRule();
         orderRule.setResource("service-order");
         orderRule.setGrade(RuleConstant.FLOW_GRADE_QPS);
-        orderRule.setCount(1);
+        orderRule.setCount(200);
         rules.add(orderRule);
 
-        // 商品服务限流：每秒最多 200 个请求
+        // 商品服务限流：每秒最多 1000 个请求（商品查询高频，阈值放宽）
         FlowRule productRule = new FlowRule();
         productRule.setResource("service-product");
         productRule.setGrade(RuleConstant.FLOW_GRADE_QPS);
-        productRule.setCount(200);
+        productRule.setCount(1000);
         rules.add(productRule);
 
-        // 支付服务限流：每秒最多 50 个请求
+        // 支付服务限流：每秒最多 200 个请求
         FlowRule payRule = new FlowRule();
         payRule.setResource("service-pay");
         payRule.setGrade(RuleConstant.FLOW_GRADE_QPS);
-        payRule.setCount(50);
+        payRule.setCount(200);
         rules.add(payRule);
 
-        // 用户服务限流：每秒最多 100 个请求
+        // 用户服务限流：每秒最多 500 个请求
         FlowRule userRule = new FlowRule();
         userRule.setResource("service-user");
         userRule.setGrade(RuleConstant.FLOW_GRADE_QPS);
-        userRule.setCount(100);
+        userRule.setCount(500);
         rules.add(userRule);
 
         FlowRuleManager.loadRules(rules);

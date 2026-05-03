@@ -38,8 +38,8 @@
           <div class="message assistant">
             <div class="message-avatar">🐟</div>
             <div class="message-bubble">
-              您好！我是飞鱼商城的 AI 购物助手小飞 🎣<br>
-              我可以帮您推荐渔具、解答产品问题、查询订单等。<br>
+              您好！我是飞鱼商城的 AI 购物助手小飞 🛒<br>
+              我可以帮您推荐商品、解答产品问题、查询订单等。<br>
               请问有什么可以帮您的？
             </div>
           </div>
@@ -127,9 +127,9 @@ const messagesEl = ref(null)
 let currentController = null
 
 const quickQuestions = [
-  '有什么推荐的入门鱼竿？',
-  '如何选择钓鱼浮漂？',
-  '冬季钓鱼需要注意什么？',
+  '有什么热门商品推荐？',
+  '如何选择适合的商品？',
+  '新用户有什么优惠？',
   '有促销活动吗？'
 ]
 

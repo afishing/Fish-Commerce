@@ -20,14 +20,14 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * 全局异常处理器
+ * 网关异常处理器
  * 统一处理网关层面的异常，返回友好的错误信息
  */
 @Slf4j
 @Order(-1)
 @Component
 @RequiredArgsConstructor
-public class GlobalExceptionHandler implements ErrorWebExceptionHandler {
+public class GatewayExceptionHandler implements ErrorWebExceptionHandler {
 
     private final ObjectMapper objectMapper;
 

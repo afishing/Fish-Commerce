@@ -109,9 +109,11 @@ const handleLogin = async () => {
         const res = await adminLogin(loginForm)
         if (res.success) {
           ElMessage.success('登录成功')
-          // 存储管理员信息
-          localStorage.setItem('adminInfo', JSON.stringify(res.data))
+          // 存储管理员信息和 JWT Token
+          const adminData = { ...res.data.user, token: res.data.token }
+          localStorage.setItem('adminInfo', JSON.stringify(adminData))
           localStorage.setItem('isAdmin', 'true')
+          localStorage.setItem('token', res.data.token)
           router.push('/admin')
         } else {
           ElMessage.error(res.message || '登录失败')

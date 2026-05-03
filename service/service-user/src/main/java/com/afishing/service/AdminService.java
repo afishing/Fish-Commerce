@@ -15,7 +15,7 @@ public interface AdminService {
     /**
      * 管理员登录
      */
-    Result<User> adminLogin(AdminLoginDTO loginDTO);
+    Result<LoginVO> adminLogin(AdminLoginDTO loginDTO);
 
     /**
      * 获取统计信息

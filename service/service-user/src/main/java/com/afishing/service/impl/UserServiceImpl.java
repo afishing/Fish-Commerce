@@ -1,6 +1,7 @@
 package com.afishing.service.impl;
 
 import com.afishing.common.result.Result;
+import com.afishing.common.util.JwtUtil;
 import com.afishing.dto.*;
 import com.afishing.entity.User;
 import com.afishing.mapper.UserMapper;
@@ -21,7 +22,7 @@ public class UserServiceImpl implements UserService {
     private UserMapper userMapper;
 
     @Override
-    public Result<User> login(LoginDTO loginDTO) {
+    public Result<LoginVO> login(LoginDTO loginDTO) {
         LambdaQueryWrapper<User> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(User::getUsername, loginDTO.getUsername());
         User user = userMapper.selectOne(wrapper);
@@ -38,9 +39,14 @@ public class UserServiceImpl implements UserService {
             return Result.error("账号已被禁用");
         }
         
+        // 生成 JWT Token
+        String role = user.getRole() != null && user.getRole() == 1 ? "ADMIN" : "USER";
+        String token = JwtUtil.generateToken(user.getId(), user.getUsername(), role);
+        
         // 清除密码后返回
         user.setPassword(null);
-        return Result.success("登录成功", user);
+        LoginVO loginVO = new LoginVO(token, user);
+        return Result.success("登录成功", loginVO);
     }
 
     @Override

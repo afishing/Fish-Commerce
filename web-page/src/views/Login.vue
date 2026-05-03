@@ -85,11 +85,10 @@ const handleLogin = async () => {
       password: form.password
     })
     ElMessage.success('登录成功！')
-    // 保存用户信息到 localStorage
-    localStorage.setItem('userInfo', JSON.stringify(res.data))
-    localStorage.setItem('userId', res.data.id)
-    // 保存token（暂时使用用户ID作为简单token）
-    localStorage.setItem('token', 'token_' + res.data.id)
+    // 保存用户信息和 JWT Token 到 localStorage
+    localStorage.setItem('userInfo', JSON.stringify(res.data.user))
+    localStorage.setItem('userId', res.data.user.id)
+    localStorage.setItem('token', res.data.token)
     router.push('/')
   } catch (error) {
     console.error('登录失败:', error)

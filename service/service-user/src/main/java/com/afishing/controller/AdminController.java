@@ -26,7 +26,7 @@ public class AdminController {
      * 管理员登录
      */
     @PostMapping("/login")
-    public Result<User> adminLogin(@Valid @RequestBody AdminLoginDTO loginDTO) {
+    public Result<LoginVO> adminLogin(@Valid @RequestBody AdminLoginDTO loginDTO) {
         return adminService.adminLogin(loginDTO);
     }
 

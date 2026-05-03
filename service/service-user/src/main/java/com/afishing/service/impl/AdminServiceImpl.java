@@ -2,6 +2,7 @@ package com.afishing.service.impl;
 
 import com.afishing.common.result.PageResult;
 import com.afishing.common.result.Result;
+import com.afishing.common.util.JwtUtil;
 import com.afishing.dto.*;
 import com.afishing.entity.Order;
 import com.afishing.entity.Product;
@@ -40,7 +41,7 @@ public class AdminServiceImpl implements AdminService {
     private final ProductFeignClient productFeignClient;
 
     @Override
-    public Result<User> adminLogin(AdminLoginDTO loginDTO) {
+    public Result<LoginVO> adminLogin(AdminLoginDTO loginDTO) {
         LambdaQueryWrapper<User> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(User::getUsername, loginDTO.getUsername());
         User user = userMapper.selectOne(wrapper);
@@ -62,9 +63,13 @@ public class AdminServiceImpl implements AdminService {
             return Result.error("账号已被禁用");
         }
 
+        // 生成 JWT Token
+        String token = JwtUtil.generateToken(user.getId(), user.getUsername(), "ADMIN");
+
         // 清除密码后返回
         user.setPassword(null);
-        return Result.success("登录成功", user);
+        LoginVO loginVO = new LoginVO(token, user);
+        return Result.success("登录成功", loginVO);
     }
 
     @Override

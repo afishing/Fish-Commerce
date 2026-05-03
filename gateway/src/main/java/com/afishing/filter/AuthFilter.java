@@ -1,5 +1,6 @@
 package com.afishing.filter;
 
+import com.afishing.common.util.JwtUtil;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
@@ -43,9 +44,12 @@ public class AuthFilter implements GlobalFilter, Ordered {
             "/user/register",
             "/user/check-username",
             "/user/check-email",
+            // 管理员登录
+            "/admin/login",
             // 商品相关
             "/product/list",
             "/product/detail",
+            "/product/hot",
             "/product/category",
             "/product/banner",
             // 公告相关
@@ -75,20 +79,37 @@ public class AuthFilter implements GlobalFilter, Ordered {
         }
 
         // 获取 Token
-        String token = request.getHeaders().getFirst(HttpHeaders.AUTHORIZATION);
+        String authHeader = request.getHeaders().getFirst(HttpHeaders.AUTHORIZATION);
 
         // Token 为空，返回未授权
-        if (token == null || token.isEmpty()) {
+        if (authHeader == null || authHeader.isEmpty()) {
             return unauthorized(exchange, "未登录，请先登录");
         }
 
-        // TODO: 这里可以添加 Token 验证逻辑
-        // 1. 验证 Token 是否有效
-        // 2. 解析用户信息
-        // 3. 将用户信息传递给下游服务
+        // 提取 Token（去除 Bearer 前缀）
+        String token = authHeader;
+        if (authHeader.startsWith("Bearer ")) {
+            token = authHeader.substring(7);
+        }
 
-        // 暂时直接放行（后续可接入 Redis 验证 Token）
-        return chain.filter(exchange);
+        // 验证 Token 有效性
+        if (!JwtUtil.validateToken(token)) {
+            return unauthorized(exchange, "登录已过期，请重新登录");
+        }
+
+        // 解析 Token 并将用户信息传递给下游服务
+        try {
+            io.jsonwebtoken.Claims claims = JwtUtil.parseToken(token);
+            ServerHttpRequest mutatedRequest = request.mutate()
+                    .header("X-User-Id", claims.getSubject())
+                    .header("X-User-Name", claims.get("username", String.class))
+                    .header("X-User-Role", claims.get("role", String.class))
+                    .build();
+            return chain.filter(exchange.mutate().request(mutatedRequest).build());
+        } catch (Exception e) {
+            log.error("Token解析异常", e);
+            return unauthorized(exchange, "Token无效，请重新登录");
+        }
     }
 
     /**

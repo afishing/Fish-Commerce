@@ -152,7 +152,7 @@ spring:
 # Sentinel 控制台配置
 spring.cloud.sentinel:
   transport:
-    dashboard: localhost:8080
+    dashboard: localhost:8858
   eager: true
 
 # 日志级别
